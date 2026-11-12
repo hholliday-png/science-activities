@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fault Lines — Unit 8 Case Files</title>
+<style>
+/* House style from the Unit 5–7 live decks (navy + gold), with plate-boundary teal and magma accents for Unit 8.
+   Unlike the fixed 1200x780 decks, this one reflows so students can study on a phone. */
+:root{
+  --navy:#0A0B1C; --navy2:#121430; --panel:#18193a; --panel2:#22244d;
+  --gold:#F6B44C; --gold-bright:#FFD37E; --coral:#F0674F; --cyan:#63E0D4; --violet:#A98BF0;
+  --ink:#F1EFF8; --muted:#A6A3C8; --line:#363866; --good:#8FE07A; --bad:#F0674F;
+  --magma:#FF7A3D; --plate:#3FB8A8;
+  --display:Georgia,'Times New Roman',serif;
+  --body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'SF Mono',Consolas,Monaco,monospace;
+  --fs:17px;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{overflow:hidden;background:var(--navy);color:var(--ink);font-family:var(--body);font-size:var(--fs);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body.live{--fs:21px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+#bg{position:fixed;inset:0;z-index:0;display:block}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 90% 55% at 50% 118%,rgba(255,110,40,.24),transparent 70%),radial-gradient(ellipse 70% 50% at 50% -5%,rgba(63,184,168,.16),transparent 70%)}
+#boom{position:fixed;inset:0;z-index:30;pointer-events:none;width:100%;height:100%}
+
+.app{position:relative;z-index:2;height:100%;display:flex;flex-direction:column}
+
+/* top bar */
+header.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 22px 4px;flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto;overflow:hidden}
+.brand .mini{width:42px;height:42px;flex:none}
+.brand .k{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .t{font-family:var(--display);font-size:21px;font-weight:700;color:var(--gold-bright);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.right{display:flex;align-items:center;gap:10px;flex:none}
+.score{display:flex;align-items:center;gap:10px;background:rgba(24,25,58,.85);border:1.5px solid var(--line);border-radius:100px;padding:5px 14px;font-weight:700;font-size:14px;white-space:nowrap}
+.score b{font-family:var(--display);font-size:20px}
+.score .ins b{color:var(--gold-bright)} .score .de b{color:var(--coral)}
+.score .chat b{color:var(--gold-bright)} .score .pl b{color:var(--magma)}
+.score .vs{color:var(--muted);font-family:var(--mono);font-size:11px}
+.score.livescore{display:none}
+body.live .score.livescore{display:flex}
+body.live .score.study{display:none}
+.icon{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:rgba(24,25,58,.85);font-size:16px;flex:none}
+.pill{height:38px;padding:0 14px;border-radius:100px;border:1.5px solid var(--line);background:rgba(24,25,58,.85);font-weight:700;font-size:13px;font-family:var(--mono);letter-spacing:.08em;white-space:nowrap}
+.pill.on{border-color:var(--coral);color:#fff;background:rgba(240,103,79,.22);box-shadow:0 0 18px rgba(240,103,79,.3)}
+
+/* case track */
+.track{display:flex;padding:4px 30px 6px;flex:0 0 auto}
+.node{flex:1;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted);position:relative;text-align:center;line-height:1.15}
+.node::before{content:"";position:absolute;top:8px;left:-50%;width:100%;height:2px;background:var(--line)}
+.node:first-child::before{display:none}
+.node .d{width:18px;height:18px;border-radius:50%;background:var(--navy2);border:2px solid var(--line);position:relative;z-index:1;display:grid;place-items:center;font-size:9px;color:#1a1200;font-weight:800}
+.node.done .d{background:var(--plate);border-color:var(--plate)}
+.node.done::before{background:var(--plate)}
+.node.now .d{border-color:var(--gold-bright);box-shadow:0 0 0 5px rgba(246,180,76,.25)}
+.node.now{color:var(--gold-bright);font-weight:700}
+.node span{margin-top:4px;padding:0 2px}
+.node:hover span{color:#fff}
+
+/* main layout */
+.main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;padding:6px 22px 14px;max-width:1280px;width:100%;margin:0 auto}
+.chatcol{display:flex;flex-direction:column;min-height:0;background:rgba(18,20,48,.55);border:1.5px solid var(--line);border-radius:22px;overflow:hidden}
+.feed{flex:1 1 auto;overflow-y:auto;padding:20px 22px 10px;scroll-behavior:smooth;overscroll-behavior:contain}
+.dock{flex:0 0 auto;border-top:1.5px solid var(--line);background:rgba(10,11,28,.88);padding:12px 16px 14px}
+.side{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto}
+
+/* messages */
+.msg{display:flex;gap:10px;margin:0 0 12px;align-items:flex-end;animation:pop .28s ease}
+.msg .av{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 35%,#7ff0e2,#2a8f84 60%,#13403b);border:2px solid var(--plate);font-size:16px}
+.bub{max-width:min(640px,86%);padding:12px 16px;border-radius:18px 18px 18px 6px;background:rgba(34,36,77,.95);border:1.5px solid var(--line);line-height:1.5}
+.bub b{color:var(--gold-bright)} .bub i{color:#d9d4ff}
+.msg.me{justify-content:flex-end}
+.msg.me .bub{border-radius:18px 18px 6px 18px;background:linear-gradient(135deg,rgba(246,180,76,.26),rgba(240,103,79,.18));border-color:var(--gold)}
+.msg.me .bub small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--gold);margin-bottom:2px}
+.typing .bub{display:flex;gap:5px;padding:14px 16px}
+.typing i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.figure{margin:0 0 12px 44px;max-width:640px;border-radius:16px;border:1.5px solid var(--line);background:#07081a;overflow:hidden;animation:pop .3s ease}
+.figure svg{display:block;width:100%;height:auto}
+.figure figcaption{font-size:13px;color:var(--muted);padding:6px 12px 8px;border-top:1px solid var(--line)}
+.chipline{margin:-4px 0 12px 44px;display:flex;gap:8px;flex-wrap:wrap;animation:pop .3s ease}
+.chip{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:100px}
+.chip.good{color:#0b2a06;background:var(--good)}
+.chip.dead{color:#2a0700;background:var(--coral)}
+.chip.info{color:#04231f;background:var(--cyan)}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase}
+.divider::before,.divider::after{content:"";flex:1;height:1.5px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.casehead{text-align:center;margin:4px 0 18px;animation:pop .35s ease}
+.casehead .n{font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--cyan);text-transform:uppercase}
+.casehead h2{font-family:var(--display);font-size:32px;color:#fff;margin-top:4px}
+.casehead p{color:var(--muted);font-size:15px;margin-top:4px}
+
+/* math card */
+.mathcard{margin:0 0 12px 44px;max-width:640px;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px;border-radius:16px;background:rgba(24,25,58,.92);border:1.5px solid var(--violet);animation:pop .3s ease}
+.mathcard .tag{grid-column:1/-1}
+.given .row{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.given .row b{font-family:var(--mono);color:var(--gold-bright);text-align:right}
+.formula{font-family:var(--mono);font-size:15px;color:var(--cyan);background:rgba(99,224,212,.08);border:1.5px solid rgba(99,224,212,.4);border-radius:12px;padding:10px 12px;line-height:1.6;align-self:start}
+.steps{list-style:none;display:grid;gap:6px;margin:0 0 12px 44px;max-width:640px}
+.steps li{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-radius:12px;background:rgba(24,25,58,.94);border:1.5px solid var(--line);font-size:15px;opacity:0;animation:pop .4s ease forwards}
+.steps li b{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.1em;flex:none}
+.tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:100px;color:#1a1200;background:linear-gradient(135deg,var(--gold-bright),var(--gold));justify-self:start;width:max-content}
+.tag.vi{background:linear-gradient(135deg,#cbb8ff,var(--violet));color:#160b33}
+.tag.co{background:linear-gradient(135deg,#ffb09f,var(--coral));color:#2a0700}
+.tag.cy{background:linear-gradient(135deg,#9af0f0,var(--cyan));color:#04231f}
+
+/* dead end */
+.deadend{margin:4px 0 14px 44px;max-width:640px;border-radius:18px;padding:16px 18px;background:linear-gradient(135deg,rgba(240,103,79,.16),rgba(24,25,58,.95));border:2px solid var(--coral);box-shadow:0 0 30px rgba(240,103,79,.18);animation:pop .35s ease}
+.deadend h3{font-family:var(--display);font-size:24px;color:#fff;margin:6px 0 10px;line-height:1.2}
+.deadend .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.deadend .two div{background:rgba(10,11,28,.6);border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.45;border:1px solid var(--line)}
+.deadend .two b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.deadend .tempt b{color:var(--gold)} .deadend .fail b{color:var(--coral)}
+.deadend .new{font-family:var(--mono);font-size:12px;color:var(--gold-bright);margin-top:10px}
+
+/* case closed */
+.closed{margin:8px 0 14px;border-radius:20px;padding:20px 22px;background:linear-gradient(135deg,rgba(63,184,168,.18),rgba(24,25,58,.95));border:2px solid var(--plate);box-shadow:0 0 34px rgba(63,184,168,.2);animation:pop .4s ease}
+.closed h3{font-family:var(--display);font-size:30px;color:#fff;margin:6px 0 4px}
+.closed ol{margin:10px 0 0 22px;display:grid;gap:6px;line-height:1.45}
+.closed ol li::marker{color:var(--plate);font-weight:700}
+.closed .stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.stat{flex:1;min-width:130px;background:rgba(10,11,28,.6);border:1.5px solid var(--line);border-radius:14px;padding:8px 12px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:26px;font-weight:700;color:#fff}
+
+/* dock: choices */
+.vote{display:none;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;border-radius:14px;padding:8px 14px;background:linear-gradient(135deg,rgba(246,180,76,.16),rgba(240,103,79,.1));border:2px solid var(--gold)}
+body.live .vote.show{display:flex}
+.vote .ask{font-weight:700}
+.vote .timer{font-family:var(--display);font-size:26px;font-weight:700;color:var(--gold-bright);min-width:52px;text-align:right}
+.vote .timer.low{color:var(--coral)}
+.choices{display:grid;gap:10px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;background:rgba(24,25,58,.92);border:2px solid var(--line);border-radius:16px;padding:11px 14px;line-height:1.35;transition:border-color .2s,transform .12s,background .2s}
+.choice:hover{border-color:var(--gold);transform:translateY(-1px)}
+.choice .L{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:19px;color:#1a1200;background:linear-gradient(135deg,var(--gold-bright),var(--gold))}
+.choice.tried{border-style:dashed;opacity:.72}
+.choice.tried .L{background:var(--coral)}
+.choice .tr{margin-left:auto;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--coral);text-transform:uppercase;white-space:nowrap}
+.choice.solo{justify-content:center;font-weight:700}
+.dockrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-weight:700;font-size:15px;padding:11px 18px;border-radius:12px;background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:#1a1200;box-shadow:0 4px 18px rgba(246,180,76,.3);transition:transform .12s,filter .2s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn.ghost{background:rgba(24,25,58,.85);color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.btn.co{background:linear-gradient(135deg,#ffb09f,var(--coral));color:#2a0700;box-shadow:0 4px 18px rgba(240,103,79,.3)}
+.btn.pl{background:linear-gradient(135deg,#8ff0e2,var(--plate));color:#04231f;box-shadow:0 4px 18px rgba(63,184,168,.3)}
+.hint{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:8px}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 5px;color:var(--muted)}
+
+/* side panels */
+.panel{background:rgba(24,25,58,.82);border:1.5px solid var(--line);border-radius:18px;padding:14px 16px}
+.panel h4{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;display:flex;justify-content:space-between;gap:8px}
+.panel h4 span{color:var(--muted)}
+.forks{display:grid;gap:7px}
+.fork{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.fork .lbl{width:58px;flex:none;font-family:var(--mono);font-size:11px}
+.fork.now .lbl{color:var(--gold-bright);font-weight:700}
+.fork .dots{display:flex;gap:6px}
+.fork .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);background:var(--navy2)}
+.fork .dot.ok{background:var(--good);border-color:var(--good)}
+.fork .dot.dead{background:var(--coral);border-color:var(--coral)}
+.fork .dot.part{background:linear-gradient(90deg,var(--coral) 50%,var(--navy2) 50%);border-color:var(--coral)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.jlist{list-style:none;display:grid;gap:6px}
+.jlist li{font-size:13px;padding:6px 10px;border-radius:10px;background:rgba(240,103,79,.1);border-left:3px solid var(--coral);line-height:1.3}
+.jlist li.locked{background:rgba(54,56,102,.3);border-left-color:var(--line);color:var(--muted);font-style:italic}
+.trail{display:flex;flex-wrap:wrap;gap:6px}
+.trail span{font-size:12px;padding:3px 9px;border-radius:100px;border:1.5px solid var(--line);color:var(--muted)}
+.trail span.ok{border-color:var(--good);color:var(--good)}
+.trail span.dead{border-color:var(--coral);color:var(--coral)}
+.meter{height:10px;border-radius:100px;background:var(--panel2);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--plate),var(--gold),var(--magma));transition:width .4s}
+
+/* board */
+.board{max-width:980px;margin:0 auto}
+.hero{display:flex;gap:18px;align-items:center;margin:6px 0 18px}
+.hero h1{font-family:var(--display);font-size:42px;line-height:1.08;color:#fff;text-wrap:balance}
+.hero p{color:var(--muted);font-size:17px;line-height:1.45;margin-top:8px;max-width:60ch}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.how .panel b{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--cyan)}
+.how .panel p{font-size:15px;line-height:1.4;margin-top:6px}
+.cases{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{text-align:left;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:18px;background:rgba(24,25,58,.88);border:2px solid var(--line);transition:border-color .2s,transform .15s;min-height:168px}
+.card:hover{border-color:var(--gold);transform:translateY(-3px)}
+.card .ic{font-size:28px}
+.card .num{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase}
+.card .ti{font-family:var(--display);font-size:19px;font-weight:700;color:#fff;line-height:1.15}
+.card .le{font-size:12px;color:var(--muted)}
+.card .st{margin-top:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.card.done{border-color:var(--plate);background:linear-gradient(160deg,rgba(63,184,168,.18),rgba(24,25,58,.9))}
+.card.done .st{color:var(--plate)}
+.cleared{display:none;margin-top:18px;text-align:center}
+.cleared.show{display:block}
+.cleared h2{font-family:var(--display);font-size:34px;color:var(--gold-bright)}
+.rank{font-family:var(--display);font-size:24px;color:var(--cyan);margin-top:4px}
+
+/* modal */
+#modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(6,6,18,.78);backdrop-filter:blur(4px);padding:18px}
+#modal.show{display:flex}
+#modal .box{width:min(860px,100%);max-height:88vh;overflow-y:auto;background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:22px}
+#modal h2{font-family:var(--display);font-size:30px;color:#fff;margin-bottom:4px}
+#modal .sub{color:var(--muted);margin-bottom:14px}
+.jcase{margin-top:14px}
+.jcase h3{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
+.jentry{padding:10px 12px;border-radius:12px;background:rgba(24,25,58,.9);border:1.5px solid var(--line);border-left:5px solid var(--coral);margin-bottom:8px;font-size:15px;line-height:1.45}
+.jentry b{color:#fff;font-family:var(--display);font-size:17px}
+.jentry .t{color:var(--gold)} .jentry .f{color:var(--ink)}
+.jentry.locked{border-left-color:var(--line);color:var(--muted);font-style:italic}
+
+#toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:45;font-family:var(--display);font-weight:700;font-size:24px;color:#1a0800;background:linear-gradient(135deg,var(--gold-bright),var(--magma));padding:10px 24px;border-radius:100px;box-shadow:0 10px 40px rgba(255,122,61,.45);display:none;white-space:nowrap}
+#toast.show{display:block;animation:tpop .5s ease}
+#toast.dead{background:linear-gradient(135deg,#ffb09f,var(--coral))}
+@keyframes tpop{0%{transform:translateX(-50%) scale(.4);opacity:0}50%{transform:translateX(-50%) scale(1.1);opacity:1}100%{transform:translateX(-50%) scale(1)}}
+
+.mobile-only{display:none}
+@media (max-width:980px){
+  .main{grid-template-columns:1fr;padding:4px 10px 10px}
+  .side{display:none}
+  .side.open{display:flex;position:fixed;inset:auto 0 0 0;max-height:72vh;z-index:40;background:var(--navy2);border-top:2px solid var(--line);border-radius:22px 22px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+  .mobile-only{display:inline-flex;align-items:center;justify-content:center}
+  .cases{grid-template-columns:repeat(2,1fr)}
+  .how{grid-template-columns:1fr}
+  .track{padding:2px 8px 4px}
+  .node span{display:none}
+  .hero h1{font-size:30px}
+  .hero .bigicon{display:none}
+}
+@media (max-width:640px){
+  header.bar{padding:10px 12px 2px}
+  .brand .k{display:none}
+  .brand .t{font-size:17px}
+  .score.study{display:none}
+  #liveBtn{display:none}
+  .right{gap:6px}
+  .feed{padding:14px 12px 8px}
+  .figure,.mathcard,.steps,.deadend,.chipline{margin-left:0}
+  .bub{max-width:92%}
+  .mathcard,.deadend .two{grid-template-columns:1fr}
+  .casehead h2{font-size:25px}
+  .dock{padding:10px 10px 12px}
+  .choice{padding:10px 12px;gap:10px}
+}
+</style></head><body>
+<canvas id="bg"></canvas><div class="glow"></div><canvas id="boom"></canvas>
+<div id="toast"></div>
+<div class="app">
+  <header class="bar">
+    <div class="brand"><svg class="mini" viewBox="0 0 44 44" aria-hidden="true"><defs><radialGradient id="gE" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#7ff0e2"/><stop offset=".6" stop-color="#2a8f84"/><stop offset="1" stop-color="#13403b"/></radialGradient></defs><circle cx="22" cy="22" r="19" fill="url(#gE)" stroke="#3FB8A8" stroke-width="2"/><path d="M6 17 L14 20 L18 15 L25 21 L30 18 L38 23" fill="none" stroke="#FF7A3D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 30 L17 27 L22 31 L29 27 L35 30" fill="none" stroke="#FFD37E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg>
+      <div style="min-width:0"><div class="k">Earth Science A · Earth's Processes: Tectonic Plates</div><div class="t">Fault Lines: Case Files</div></div></div>
+    <div class="right">
+      <div class="score study" title="Insight points and dead ends you've mapped"><span class="ins">🧠 <b id="sIns">0</b></span><span class="vs">·</span><span class="de">🚧 <b id="sDe">0</b></span></div>
+      <div class="score livescore" title="Shift+C adds a chat point, Shift+X a plates point"><span class="chat">💬 Chat <b id="sChat">0</b></span><span class="vs">vs</span><span class="pl">🌋 Plates <b id="sPl">0</b></span></div>
+      <button class="pill" id="liveBtn" title="Live mode: bigger text, chat vote timer, Chat vs Plates score">📺 LIVE</button>
+      <button class="icon mobile-only" id="mapBtn" aria-label="Show case map">🗺️</button>
+      <button class="icon" id="jBtn" aria-label="Open the Dead-End Journal">📓</button>
+      <button class="icon" id="snd" aria-label="Mute sound">🔊</button>
+    </div>
+  </header>
+  <nav class="track" id="track" aria-label="Case files"></nav>
+  <div class="main" id="main">
+    <section class="chatcol" aria-label="Case conversation">
+      <div class="feed" id="feed" aria-live="polite"></div>
+      <div class="dock" id="dock"></div>
+    </section>
+    <aside class="side" id="side"></aside>
+  </div>
+</div>
+<div id="modal" role="dialog" aria-modal="true"><div class="box" id="mbox"></div></div>
+<script>
+/* ================= CONTENT: Unit 8 — Earth's Processes: Tectonic Plates =================
+   Each case is a decision tree. Node ids starting with "x_" are side-branches that follow a wrong idea;
+   ids starting with "d_" are dead ends; every other id is a fork on the main path.
+   Choice = [text, target, correct?, mathSteps?] */
+const D=(t,tempt,fail)=>({dead:{t,tempt,fail}});
+
+const CASES=[
+/* ---------- 1 ---------- */
+{id:"drift",icon:"🧩",title:"The Puzzle Continent",lesson:"Plate Tectonic Theory",blurb:"Why did it take 50 years for anyone to believe Wegener?",
+ recap:["In 1912, Alfred Wegener proposed <b>continental drift</b>: all the continents were once one supercontinent, <b>Pangaea</b>.",
+  "His evidence: <b>jigsaw fit, geological fit, glacial deposits, fossils</b>.",
+  "Scientists rejected it because his forces (Earth’s spin, the Moon’s pull) were far too weak. He had no <b>mechanism</b>.",
+  "From the 1950s on, new technology found <b>seafloor spreading, hotspots, transform faults and mantle convection</b>.",
+  "<b>Plate tectonics:</b> Earth’s lithosphere is broken into plates that move over the mantle, changing Earth’s surface."],
+ nodes:{
+ start:{m:["It’s 1912. You’re standing at a world map with a young German scientist named <b>Alfred Wegener</b>.",
+   "Look across the Atlantic. The bulge of <b>South America</b> seems to tuck right into the curve of <b>West Africa</b>, like two puzzle pieces.",
+   "What’s the smartest first move?"],
+  c:[["They were definitely joined. The shapes prove it.","x_proof"],
+     ["It’s a clue. Test it by looking for other evidence that matches across the ocean.","evidence",1],
+     ["Coincidence. Continents are solid rock, so they can’t move.","d_coincidence"]]},
+ x_proof:{m:["Okay, let’s present that to a room full of 1912 geologists.",
+   "One stands up: <i>“Coastlines change all the time. Sea level rises and falls, and beaches erode. A shape match could be luck. What else do you have?”</i>"],
+  c:[["Nothing else. The fit is too perfect to be luck.","d_shapeonly"],["Fair point. Let me go find independent evidence.","evidence",1]]},
+ d_shapeonly:D("“One clue is proof”","The fit really is striking, and our brains love a matching pattern.","One observation is a pattern, not proof. Science needs several <b>independent</b> lines of evidence that all point the same way. Wegener knew this, so he went hunting for fossils, rocks and glacier clues."),
+ d_coincidence:D("“Solid ground can’t move”","The ground feels perfectly still under your feet, and no one has ever watched a continent move.","Feeling still isn’t evidence. Plates move a few centimeters a year (about as fast as your fingernails grow), far too slowly to feel. Dismissing an idea without testing it isn’t science. Today GPS stations measure that motion directly."),
+ evidence:{m:["Good instinct. Wegener spent years collecting clues from both sides of the ocean.","Which set of evidence did <b>Wegener himself</b> actually gather?"],
+  c:[["Jigsaw fit, matching rocks and mountains, glacial deposits, and fossils","why",1],
+     ["Seafloor spreading, magnetic stripes, and hotspots","d_later"],
+     ["GPS measurements of the continents moving","d_gps"]]},
+ d_later:D("Mixing up the timeline","These ARE real evidence for plate tectonics, so they feel like they belong on the list.","They were discovered in the 1950s and 60s with sonar and magnetometers that didn’t exist yet. Wegener died in 1930. His evidence was the jigsaw fit, geological fit, glacial deposits and fossils."),
+ d_gps:D("GPS in 1912","GPS really does measure plate motion today: a few cm per year.","The first satellite launched in 1957, and GPS came decades after that. Wegener had maps, rocks and fossils, nothing that could measure motion directly."),
+ why:{m:["Exactly: jigsaw fit, geological fit, glacial deposits and fossil evidence.",
+   "Here’s the twist. Many scientists <b>agreed his evidence was real</b>… and still rejected continental drift for decades.","Why?"],
+  c:[["His evidence was faked or sloppy","d_fake"],
+     ["He couldn’t explain HOW continents move. The forces he suggested were too weak.","mech",1],
+     ["Continents are too heavy to ever move","d_heavy"]]},
+ d_fake:D("“The evidence was bad”","When a theory gets rejected, it’s natural to assume the evidence was weak.","Wegener’s fossil, rock and glacier evidence was solid, and it’s still used today. The problem was the missing <b>mechanism</b>: nobody could explain what force moves a continent."),
+ d_heavy:D("“Too heavy to move”","Continents are unimaginably massive.","Mass alone doesn’t stop motion if a big enough force pushes for a long enough time. The real objection was that Wegener’s particular forces were too weak. Later, mantle convection supplied a force that was big enough."),
+ mech:{m:["Right: the <b>mechanism</b> was the weak spot.","Wegener’s first idea: Earth’s <b>spin</b> creates a force that flings continents away from the poles.","Should we accept it?"],
+  c:[["Yes. Spinning things fling outward, like on a merry-go-round.","x_spin"],["Not yet. Run the numbers first.","calc",1]]},
+ x_spin:{m:["Physicists did the math. The force is real, but it’s <b>far too weak</b> to shove a continent through solid rock. It’s like trying to push a school bus with a feather.",
+   "Wegener tries a backup idea: the <b>Moon’s gravity</b> drags the continents along, the same way it pulls the tides.","Accept that one?"],
+  c:[["Yes. The Moon moves whole oceans, so it can move continents.","d_moon"],["Run the numbers on that one too.","calc",1]]},
+ d_moon:D("“The Moon drags continents”","The Moon really does pull the oceans into tides, so it seems powerful enough.","Scientists calculated that tidal forces strong enough to drag continents would have stopped Earth from spinning within about a year. Tides lift water up and down. They don’t push continents sideways."),
+ calc:{m:["The calculations sank <b>both</b> of Wegener’s forces. Meanwhile, some scientists explained the matching fossils with ancient <b>land bridges</b> that later sank.",
+   "Wegener died in 1930 with his idea mostly rejected.",
+   "Then in the 1950s, new technology let scientists map the <b>ocean floor</b>. What finally supplied the missing HOW?"],
+  c:[["Mantle convection and seafloor spreading","theory",1],["Finding the sunken land bridges","d_bridge"],["Finding bigger, better fossils","d_morefossils"]]},
+ d_bridge:D("Sunken land bridges","It explains how animals could cross oceans without continents moving.","Seafloor maps found young volcanic rock (basalt), not sunken pieces of continent. A land bridge also can’t explain matching rock layers, mountain belts or glacier scratches."),
+ d_morefossils:D("“More fossils = more proof”","Fossils were Wegener’s strongest evidence, so more seems better.","More fossils would strengthen the WHAT (the continents were joined), but not the HOW. The missing piece was a <b>force</b>, and that came from the ocean floor and the mantle."),
+ theory:{m:["Yes! Seafloor spreading, hotspots, transform faults and mantle convection turned continental drift into a bigger idea.","Last step. Which statement is the <b>theory of plate tectonics</b>?"],
+  c:[["Continents plow through the ocean floor on their own","d_plow"],
+     ["Earth’s lithosphere is broken into plates that move over the mantle, changing Earth’s surface","end",1],
+     ["All the continents are connected underneath and move together as one piece","d_together"]]},
+ d_plow:D("Continents plowing through the seafloor","That was close to Wegener’s original picture of continental drift.","Continents don’t plow through anything. They ride along as parts of bigger plates that include ocean floor. The whole plate (a piece of the <b>lithosphere</b>) moves together over the softer mantle below."),
+ d_together:D("One connected, moving shell","The plates do fit together and cover the whole Earth.","If everything moved as one piece, there would be no boundaries, and no earthquakes, volcanoes or mountains where plates meet. Plates move at different speeds and in different directions."),
+ end:{end:1,m:["Case closed. You just followed science’s real path: <b>observation → evidence → rejection → new technology → theory</b>."]}
+}},
+
+/* ---------- 2 ---------- */
+{id:"fossils",icon:"🦕",title:"The Fossil Files",lesson:"Fossils and Plate Tectonics",blurb:"A freshwater reptile on two continents. How?",
+ recap:["A <b>fossil</b> is the trace or remains of past plant or animal life.",
+  "<b>Mesosaurus</b> (freshwater reptile) is found only in southern Africa and eastern South America, so those continents were joined.",
+  "<b>Cynognathus</b> and <b>Lystrosaurus</b> (land reptiles) are found on continents now separated by oceans, including Antarctica.",
+  "Warm-climate plant fossils on <b>Svalbard</b> mean that land once sat closer to the equator.",
+  "<b>Glossopteris</b> appears only on the southern continents, which formed one cool climate zone inside Pangaea.",
+  "Fossils were <b>independent evidence</b> supporting continental drift."],
+ nodes:{
+ start:{m:["Meet <b>Mesosaurus</b>: a small reptile that lived in <b>fresh water</b> about 280 million years ago.",
+   "Its fossils turn up in only two places: southern <b>Africa</b> and eastern <b>South America</b>. The whole Atlantic Ocean lies between them.","How did it end up on both sides?"],
+  c:[["It swam across the Atlantic","x_swim"],["A land bridge connected them, then sank","d_bridge2"],
+     ["Africa and South America were joined, so it lived in one connected set of lakes and rivers","lystro",1]]},
+ x_swim:{m:["Let’s test it. Mesosaurus lived in <b>fresh water</b>. The Atlantic is thousands of kilometers of <b>salt water</b>.",
+   "Also: if it could cross oceans, you’d expect fossils on lots of coastlines. But they’re ONLY in those two spots, and the spots line up perfectly if you close the Atlantic."],
+  c:[["So swimming doesn’t fit the evidence","d_swim"]]},
+ d_swim:D("“It swam across”","Some reptiles, like sea turtles, really do cross oceans.","Mesosaurus was a freshwater animal and couldn’t survive thousands of kilometers of salt water. A swimmer would also have left fossils on many coastlines, not just two spots that match up when the continents are fit together."),
+ d_bridge2:D("Sunken land bridges","A bridge would let animals walk across without any continents moving.","No sunken bridge has ever been found. The ocean floor is young volcanic rock, not a drowned continent. Bridges also can’t explain matching rock layers or glacier scratches."),
+ lystro:{m:["That fits the evidence. Wegener found more examples: <b>Cynognathus</b>, a land reptile about 1 meter long, in both South America and Africa…",
+   "…and <b>Lystrosaurus</b>, a Triassic land reptile, in <b>India, Africa and Antarctica</b>.","Lystrosaurus in <b>Antarctica</b>? What’s the best explanation?"],
+  c:[["Lystrosaurus was adapted to ice and snow","d_icelizard"],
+     ["Antarctica was once joined to Africa and India, in a warmer location","svalbard",1],
+     ["Its bones floated there on icebergs","d_iceberg"]]},
+ d_icelizard:D("An ice-age reptile","Some animals today are amazing at surviving cold.","Reptiles depend on outside warmth, and Lystrosaurus also lived in what are now hot India and Africa. Antarctica wasn’t always frozen, and it wasn’t always at the South Pole."),
+ d_iceberg:D("Bones on icebergs","Icebergs really do carry rocks long distances.","The fossils are buried in rock layers that formed on land, where the animals lived and died. Icebergs couldn’t deliver the same species to India, Africa AND Antarctica in matching rock layers."),
+ svalbard:{m:["Yes. The pieces moved, and Antarctica drifted to the pole later.",
+   "Now the plants. On the <b>Svalbard Islands</b>, far north of the Arctic Circle, Wegener found fossils of plants that need a <b>warm</b> climate.","Which explanation did Wegener argue for?"],
+  c:[["The plants grew under the snow","d_snow"],["Birds or wind carried the seeds there","d_seeds"],
+     ["Svalbard used to sit much closer to the equator and has moved north since","glosso",1]]},
+ d_snow:D("Plants growing under snow","Some tough plants do survive harsh winters.","These were warm-climate plants. They need warmth and steady sunlight, and the Arctic has months of darkness. The land itself must once have been somewhere warmer."),
+ d_seeds:D("Seeds blew in","Seeds really do travel on the wind and inside birds.","A seed that lands in the Arctic can’t grow into a warm-climate plant. The fossils show whole plants that grew right there, so the place where Svalbard sat must have been warm."),
+ glosso:{m:["Right. Land moves, and its climate changes as it moves.",
+   "One more fossil: <b>Glossopteris</b>, a seed fern that grew in cool (subarctic) climates. Its seeds were big and heavy, much too heavy to blow across an ocean.",
+   "Its fossils show up in <b>Africa, Australia, India, South America and Antarctica</b>. What does that pattern tell you?"],
+  c:[["Glossopteris must have grown all over the world","d_everywhere"],["Those southern lands were joined in one climate zone","check",1]]},
+ d_everywhere:D("“It grew everywhere”","Five continents sounds like everywhere.","Glossopteris is missing from rock of the same age in North America, Europe and northern Asia. It shows up ONLY on the southern continents, and those fit together into one landmass. That’s a pattern, not “everywhere.”"),
+ check:{m:["Exactly. Those southern continents formed one big landmass in the southern part of Pangaea.","Quick check, detective. What was the relationship between fossils and continental drift?"],
+  c:[["Fossils showed that the continents fit together like puzzle pieces","d_fitfossil"],
+     ["Fossils provided evidence that supported continental drift","end",1],
+     ["Fossils proved that animals evolved over time","d_evolve"]]},
+ d_fitfossil:D("Mixing up the clues","Fossils and the jigsaw fit point to the same conclusion, so they blur together.","The jigsaw fit comes from coastline <b>shapes</b>. Fossils are separate, independent evidence: the same species on continents now far apart. Independent clues that agree are what make an argument strong."),
+ d_evolve:D("Right fact, wrong question","Fossils DO show evolution, so the statement is true.","It’s true, but it doesn’t answer the question. The question asked how fossils relate to continental drift: matching species across oceans supported the idea that the continents were once joined."),
+ end:{end:1,m:["Case closed. Four different organisms, one conclusion: these continents were once <b>connected</b>."]}
+}},
+
+/* ---------- 3 ---------- */
+{id:"stripes",icon:"🧲",title:"The Striped Seafloor",lesson:"Magnetism and Plate Tectonics",blurb:"Hidden magnetic stripes turn the ocean floor into a clock.",
+ recap:["When lava cools, iron minerals line up with Earth’s magnetic field and lock in place. Studying this is <b>paleomagnetism</b>.",
+  "Earth’s magnetic field has <b>reversed</b> many times, so rock records <b>normal</b> and <b>reversed</b> stripes.",
+  "The stripes are <b>mirror images</b> on both sides of mid-ocean ridges, which is evidence of <b>seafloor spreading</b>.",
+  "The stripes work as a geologic clock: <b>rate = distance ÷ time</b> (a few cm per year).",
+  "Broken, offset stripes in the <b>Juan de Fuca Plate</b> record transform faults and earthquakes."],
+ nodes:{
+ start:{m:["It’s the 1950s. Ships tow <b>magnetometers</b> back and forth over the <b>Mid-Atlantic Ridge</b>, an underwater mountain range.",
+   "They find something strange: long <b>stripes</b> of rock. In some stripes the magnetism points north like today (<b>normal</b>). In others it points the opposite way (<b>reversed</b>).",
+   "First question: how does a rock record magnetism at all?"],
+  c:[["Lightning strikes magnetize the rock","d_lightning"],
+     ["Iron minerals in cooling lava line up with Earth’s magnetic field, then lock in place when the rock hardens","mirror",1],
+     ["The Moon’s pull magnetizes the rock","d_moonmag"]]},
+ d_lightning:D("Lightning magnetizes the seafloor","Lightning really can magnetize the rock it hits.","Lightning makes small, random patches, and it can’t reach the deep seafloor through kilometers of water. These are neat, parallel stripes hundreds of kilometers long."),
+ d_moonmag:D("The Moon makes magnetism","The Moon does affect Earth through gravity (tides).","Gravity and magnetism are different forces. The magnetism comes from <b>Earth’s own field</b>, which is made by the swirling liquid iron of the outer core (remember Unit 7!)."),
+ mirror:{m:["Yes. Iron minerals act like tiny compass needles frozen in stone. This is <b>paleomagnetism</b>, the study of ancient magnetic fields.",
+   {fig:"stripes"},
+   "Now look at the stripe map. The pattern on the left of the ridge is a <b>mirror image</b> of the pattern on the right.","What’s your hypothesis?"],
+  c:[["New crust forms at the ridge and spreads out both ways, recording each magnetic flip like a tape recorder","flip",1],
+     ["The stripes have been there since Earth formed","x_always"],
+     ["It’s random. The pattern just happens to look symmetrical.","d_random"]]},
+ x_always:{m:["That’s testable! If the stripes formed with the Earth, the rock should be about the same age everywhere.",
+   "Drill ships pulled up rock cores. Result: the <b>youngest</b> rock is right at the ridge, and it gets steadily <b>older</b> the farther you go, on both sides."],
+  c:[["So the stripes formed over time, starting at the ridge. My idea doesn’t hold.","d_always"]]},
+ d_always:D("Stripes from the beginning","The deep ocean floor seems ancient and unchanging.","Rock ages increase steadily away from the ridge on both sides. That only makes sense if new crust is constantly being made at the ridge and carried outward."),
+ d_random:D("“It’s just random”","Patterns sometimes appear by chance.","Random noise wouldn’t give the SAME sequence of stripe widths, mirrored on both sides of ridges all over the world. Lava flows on land record the same sequence of flips, with the same dates."),
+ flip:{m:["That’s <b>seafloor spreading</b>. Magma rises at the ridge, cools into new crust, and older crust gets pushed outward.","So what does a <b>reversed</b> stripe tell us?"],
+  c:[["The continents flipped upside down","d_upside"],["Earth’s magnetic field has flipped (north becoming south) many times","rate",1]]},
+ d_upside:D("The rock flipped over","If the magnetism points backward, maybe the rock got turned over.","Upside-down crust would have upside-down rock layers, and it doesn’t. Reversed stripes alternate neatly with normal ones in the same flat seafloor. The <b>field</b> flipped, not the rock."),
+ rate:{m:["Yes: <b>magnetic reversals</b>. Each one has been dated, which turns the stripes into a <b>geologic clock</b>.",
+   {math:{given:[["Distance from ridge","50 km"],["Age of rock there","2,500,000 yr"],["1 km","100,000 cm"]],formula:"rate = distance ÷ time"}},
+   "How fast did the seafloor spread on this side of the ridge?"],
+  c:[["2 cm per year","jdf",1,["Convert: 50 km × 100,000 = 5,000,000 cm","Divide: 5,000,000 cm ÷ 2,500,000 yr = 2 cm/yr","About as fast as your fingernails grow!"]],
+     ["20 km per year","d_units"],["0.5 cm per year","d_divflip"]]},
+ d_units:D("Forgetting the units","50 and 2.5 look like they should divide into something with a 2 in it.","At 20 km per year, the whole Atlantic would open in about 300 years. Convert km to cm first (×100,000), then divide by years: 5,000,000 cm ÷ 2,500,000 yr = <b>2 cm/yr</b>."),
+ d_divflip:D("Dividing upside down","Both numbers are right there, so it’s easy to divide in the wrong order.","Rate is <b>distance ÷ time</b>, not time ÷ distance. Dividing 2,500,000 by 5,000,000 gives 0.5 “years per cm,” which isn’t a speed."),
+ jdf:{m:["Nailed it. Now a real plate: the <b>Juan de Fuca Plate</b>, off the coast of Washington and Oregon, moves about <b>4 cm per year</b> as it slides under North America.",
+   {math:{given:[["Speed","4 cm / yr"],["Time","1,000,000 yr"],["1 km","100,000 cm"]],formula:"distance = rate × time"}},
+   "How far does it move in 1 million years?"],
+  c:[["4 km","d_conv"],["40 km","broken",1,["Multiply: 4 cm × 1,000,000 = 4,000,000 cm","Convert: 4,000,000 ÷ 100,000 = 40 km","A few cm a year really adds up over geologic time."]],["400 km","d_conv2"]]},
+ d_conv:D("Conversion slip (too small)","Dividing by a big number is easy to overdo.","4 × 1,000,000 = 4,000,000 cm. Dividing by 100,000 cm per km gives <b>40 km</b>, not 4. Count the zeros carefully."),
+ d_conv2:D("Conversion slip (too big)","Big time scales make big answers feel right.","400 km in a million years would mean 40 cm per year, ten times faster than the plate actually moves. 4,000,000 cm ÷ 100,000 = <b>40 km</b>."),
+ broken:{m:["40 km. That’s how a few cm a year builds an ocean.",
+   "One more clue. In the Juan de Fuca Plate, the magnetic stripes are <b>broken and shifted sideways</b> in places.","What does that tell a geologist?"],
+  c:[["The plate cracked along a transform fault during big earthquakes, and the stripes help date when","end",1],["The ship’s instruments glitched","d_glitch"]]},
+ d_glitch:D("“The data is wrong”","Instruments really can make mistakes.","The offsets show up survey after survey, from different ships, and they line up with fault lines and earthquake records. Repeated, consistent data is real data."),
+ end:{end:1,m:["Case closed. The seafloor is a tape recorder: it proves the plates move, and it tells us <b>how fast</b>."]}
+}},
+
+/* ---------- 4 ---------- */
+{id:"rocks",icon:"🪨",title:"Rocks Tell Time",lesson:"Age of Rock and Plate Tectonics",blurb:"Coal in Antarctica, glaciers in Africa, and kangaroos.",
+ recap:["Oceanic crust is dense and gets <b>recycled</b> at subduction zones, so the seafloor is young (under ~200 million years).",
+  "The oldest rocks are in <b>cratons</b>, the stable cores of continents.",
+  "Matching cratons and mountain belts show South America and Africa split about <b>180 million years ago</b> (~2.8 cm/yr).",
+  "The <b>Appalachians</b> match mountains in Europe and Africa: one chain from the collision that formed Pangaea.",
+  "Coal and glacier scratches in surprising places show the continents sat in <b>different climates</b>.",
+  "When continents split, animals like <b>marsupials</b> were isolated and changed separately."],
+ nodes:{
+ start:{m:["Rocks are a <b>record</b> of Earth’s history. But some pages of that record get erased and recycled.","Where would you look for Earth’s <b>oldest</b> rocks?"],
+  c:[["The deep ocean floor. It’s the lowest, so it must be the oldest.","x_ocean"],
+     ["The stable centers of continents, far from plate edges","cratons",1],
+     ["Fresh lava from a volcano, since it comes from deep inside Earth","d_lava"]]},
+ x_ocean:{m:["Let’s check the drill cores. The <b>oldest seafloor anywhere</b> is only about <b>180–200 million years</b> old. Some continental rock is over <b>4 billion</b> years old.","So why is the ocean floor so young?"],
+  c:[["Ocean crust is denser, so it sinks back into the mantle at subduction zones and gets recycled","cratons",1],["Seawater dissolves the old rock","d_dissolve"]]},
+ d_dissolve:D("Seawater dissolves the seafloor","Water really does slowly wear rock away.","Seawater weathers rock very slowly. It can’t erase a whole ocean floor. The real reason: oceanic crust is dense and sinks back into the mantle at subduction zones, so it’s constantly recycled."),
+ d_lava:D("“Deep means old”","Magma comes from deep inside a very old planet.","A rock’s age is counted from when it <b>cooled and hardened</b>. Fresh lava makes brand-new rock, the youngest on Earth."),
+ cratons:{m:["Right. Dense <b>oceanic</b> crust gets recycled into the mantle, but lighter <b>continental</b> crust stays at the surface. The oldest rocks sit in <b>cratons</b>, the stable cores of continents.",
+   "When geologists mapped South America and Africa, cratons over <b>2 billion years old</b> and their mountain belts lined up across the two coastlines.","When do geologists think these two continents split apart?"],
+  c:[["About 6,000 years ago","d_6000"],["About 180 million years ago","speed",1],["4.5 billion years ago, when Earth formed","d_45"]]},
+ d_6000:D("A young Earth","In 1787, most people believed Earth was only about 6,000 years old.","James Hutton realized slow processes like erosion need huge amounts of time (<b>uniformitarianism</b>). At 2 cm per year, 6,000 years would open a gap of only about 120 meters, not an ocean."),
+ d_45:D("Old rocks = old split","The cratons are billions of years old, so the split must be too.","The cratons are old, but they stayed joined for a very long time. Pangaea began to break up around 200 million years ago, and these two separated around 180 million years ago."),
+ speed:{m:["Right: around 180 million years ago. Let’s check whether that makes sense.",
+   {math:{given:[["Ocean width (use this)","5,000 km"],["Time since the split","180,000,000 yr"],["1 km","100,000 cm"]],formula:"rate = distance ÷ time"}},
+   "At what average speed did the continents separate?"],
+  c:[["About 2.8 cm per year","mtns",1,["Convert: 5,000 km × 100,000 = 500,000,000 cm","Divide: 500,000,000 ÷ 180,000,000 ≈ 2.8 cm/yr","Very close to the spreading rates from the magnetic stripes. Two independent methods agree!"]],
+     ["About 28 km per year","d_units2"],["About 0.36 cm per year","d_divflip2"]]},
+ d_units2:D("Skipped the conversion","5,000 ÷ 180 ≈ 28, so it seems right.","That answer ignores the units. At 28 km a year, Africa would have crossed the ocean in under 200 years. Convert km to cm, then divide by years: <b>≈ 2.8 cm/yr</b>."),
+ d_divflip2:D("Time ÷ distance","Both big numbers are right there.","180,000,000 ÷ 500,000,000 = 0.36 is “years per cm,” not a speed. Rate = <b>distance ÷ time</b>."),
+ mtns:{m:["Two methods, same answer. That’s how a theory gets strong.",
+   "Next clue: the <b>Appalachian Mountains</b> match worn-down mountains in <b>Scotland, Scandinavia</b> and <b>Africa</b>: same rock types, same ages, same structure. An ocean separates them now.","Best explanation?"],
+  c:[["Two separate mountain chains that happened to form the same way","d_coinc2"],
+     ["One chain, built when landmasses collided to form Pangaea, then torn apart when Pangaea split","climate",1]]},
+ d_coinc2:D("Coincidental twins","Mountains form in similar ways all over the world.","Similar processes don’t make the SAME rock sequence at the SAME age. And when you close the Atlantic on a map, the belts line up end to end into one chain."),
+ climate:{m:["Yes. The Appalachians are the worn-down cores of mountains that may once have been as tall as the Himalayas.",
+   "Climate clues now. Thick <b>coal</b> beds (made from swamp plants) sit far from today’s tropics. And <b>glacier scratches</b> about 300 million years old cover parts of <b>South America, Africa, India, Australia and Antarctica</b>, places that are mostly warm today.",
+   "Which picture explains BOTH clues?"],
+  c:[["A huge ice age froze the whole planet","d_global"],["One giant ice sheet stretched across the oceans","d_sheet"],
+     ["The continents were joined. The southern part sat over the South Pole, and the coal lands sat near the equator.","marsup",1]]},
+ d_global:D("A whole-planet freeze","Ice ages really did happen.","If the whole planet froze, tropical coal swamps couldn’t be growing at the same time. The rock record shows Earth was not in a deep global ice age then. Only certain lands had glaciers."),
+ d_sheet:D("An ice sheet across the ocean","Ice sheets can be enormous, up to a mile thick.","Ice sheets grow on land. They can’t spread across thousands of kilometers of open ocean. Put the continents back together, though, and the glaciated areas form one patch around the South Pole."),
+ marsup:{m:["Exactly. Plate positions control climate, and the rocks remember.",
+   "Last clue: animals. Australia has kangaroos, koalas and lots of <b>marsupials</b> (mammals whose babies develop in a pouch), but very few placental mammals.",
+   "Yet 60-million-year-old marsupial fossils from <b>South America, Antarctica and Australia</b> are nearly identical. Why is Australia so different today?"],
+  c:[["Marsupials hopped or swam there later","d_hop"],["Marsupials only ever lived in Australia","d_onlyaus"],
+     ["Those continents split apart. Australia’s animals were isolated and changed separately for millions of years.","end",1]]},
+ d_hop:D("They traveled there later","Animals do spread to new places.","There’s no land route from South America to Australia today, and kangaroos can’t swim oceans. The matching fossils are older than the split: the animals were already there while the land was connected."),
+ d_onlyaus:D("Marsupials are only Australian","Today, most marsupials do live in Australia.","Marsupial fossils are found in South America and Antarctica, and opossums (marsupials!) live in the Americas today. Their ancestors spread across connected land before the continents split."),
+ end:{end:1,m:["Case closed. Cratons, mountains, coal, glaciers and animals all tell the same story: <b>the continents have moved</b>."]}
+}},
+
+/* ---------- 5 ---------- */
+{id:"engine",icon:"♨️",title:"The Engine Below",lesson:"Investigating Thermal Convection Lab",blurb:"What actually moves the plates? Build the model.",
+ recap:["<b>Thermal convection</b>: energy moves WITH matter in a fluid. Warm → less dense → rises. Cool → denser → <b>gravity</b> pulls it down.",
+  "Earth’s heat source: the hot <b>core</b> plus <b>radioactive decay</b> in rock.",
+  "The asthenosphere is <b>solid rock that flows slowly</b>, like putty. We know because S waves pass through it.",
+  "Rising currents → <b>divergent</b> boundaries and new crust. Sinking currents → <b>convergent</b> boundaries where crust is recycled.",
+  "Convection drives the <b>rock cycle</b> between Earth’s surface and its interior."],
+ nodes:{
+ start:{m:["Lab time! A clear pot of water sits on a burner. You drip <b>red</b> food coloring into the bottom, right over the flame.","What does the warm, red water do?"],
+  c:[["It sinks, because heat pushes things down","d_sink"],["It rises, because warming makes it expand and become less dense","top",1],["It stays put. Only the heat moves, not the water.","d_conduct"]]},
+ d_sink:D("Heat pushes down","The flame is under the pot, so it feels like the heat should stay down there.","Warm fluid expands, so the same mass takes up more space. It becomes <b>less dense</b> and floats upward, which is why hot-air balloons rise."),
+ d_conduct:D("Only heat moves","In a metal spoon, heat really does travel without the metal moving. That’s conduction.","In a fluid, the particles themselves move and carry the energy with them. That’s <b>convection</b>: matter AND energy move together."),
+ top:{m:["Yes. Now the red water reaches the surface, away from the flame. You drip <b>blue</b> (cold) coloring on top.","What happens next?"],
+  c:[["It cools, becomes denser, and gravity pulls it back down, making a loop","earth",1],["It keeps rising and leaves the pot","d_leave"]]},
+ d_leave:D("It just keeps rising","Steam does leave a boiling pot.","A little water evaporates, but most of it cools at the surface, gets denser and sinks. Rise, cool, sink, reheat: that repeating loop is a <b>convection cell</b>, and gravity pulls the dense fluid down."),
+ earth:{m:["That loop is a <b>convection cell</b>. Gravity is the secret ingredient: dense material sinks, and less dense material rises.",{fig:"convection"},"Now scale it up to Earth. What heats Earth’s “pot” from below?"],
+  c:[["The Sun heats the mantle","d_sun"],["Heat from Earth’s hot interior: the core, plus radioactive elements in the rock","mantle",1],["Friction from plates rubbing together","d_friction"]]},
+ d_sun:D("The Sun heats the mantle","The Sun heats everything on the surface, so why not the inside too?","Sunlight only warms the top few meters of ground. Mines get hotter as you go DOWN (Unit 7: about 25 °C per km), so the heat must come from inside."),
+ d_friction:D("Friction drives it","Rubbing things together really does make heat.","That’s backwards. The plates move BECAUSE of convection, so their friction can’t be what starts it. The engine is heat flowing out from the core and from radioactive decay."),
+ mantle:{m:["Right. Heat flows outward from the core and from radioactive decay in the rock.","Now a big one. Some books say the plates “float on molten rock.” Is the mantle a sea of liquid lava?"],
+  c:[["Yes. The plates float on an ocean of lava.","x_liquid"],["Not really. It’s mostly solid rock that’s hot enough to flow very slowly, like putty.","cells",1]]},
+ x_liquid:{m:["Let’s test that with what you learned in Unit 7.","<b>S waves</b> can’t travel through liquid. If the mantle were an ocean of lava, what would seismographs record?"],
+  c:[["No S waves would get through the mantle. But they DO travel through it.","d_liquid"]]},
+ d_liquid:D("A lava ocean under the plates","Volcanoes pour out lava, so it seems like there must be a sea of it underground.","S waves travel through the mantle, so it’s <b>solid</b>. The asthenosphere is solid rock hot enough to flow very slowly, like putty. Only small pockets melt into magma, mostly under ridges, hotspots and subduction zones."),
+ cells:{m:["Exactly: it’s solid, but it flows over millions of years.","Where hot mantle <b>rises</b> and where cool mantle <b>sinks</b>, what happens to the plates above?"],
+  c:[["Where it rises, plates pull apart (divergent: ridges, new crust). Where it sinks, plates come together (convergent: crust is recycled).","claim",1],
+     ["Where it rises, plates push together. Where it sinks, they pull apart.","d_backwards"],
+     ["Where it rises, plates slide past each other","d_transform"]]},
+ d_backwards:D("Flipped boundaries","It’s easy to swap them when you picture arrows meeting.","Picture the pot: rising fluid hits the surface and spreads OUT to both sides, pulling plates apart (divergent). Where cool material sinks, the surface gets dragged together and down (convergent)."),
+ d_transform:D("Convection makes transform boundaries","Transform faults are real plate boundaries, so they must have a convection job too.","Rising currents spread plates apart, not sideways past each other. Transform faults form where plates slide past each other, often connecting offset pieces of ridges."),
+ claim:{m:["You just built the model! Last step: the claim from your lab portfolio.","<b>Claim:</b> Thermal convection in the mantle recycles rock on Earth’s surface. Which evidence supports it best?"],
+  c:[["Volcanoes are very hot","d_weak"],["New crust forms at mid-ocean ridges, while old, dense crust sinks back into the mantle at subduction zones","end",1],["The mantle is very thick","d_weak2"]]},
+ d_weak:D("True, but weak evidence","It’s true and it’s about heat, so it feels connected.","Strong evidence has to show the <b>cycle</b>: crust being made AND destroyed. Hot volcanoes don’t show either one by themselves."),
+ d_weak2:D("A fact that doesn’t connect","The mantle’s size matters, so it seems relevant.","Thickness doesn’t show rock being recycled. Good evidence connects directly to the claim: young crust made at ridges, old crust sinking at trenches."),
+ end:{end:1,m:["Case closed. Heat + gravity + slowly flowing rock = the <b>engine</b> that moves the plates and recycles the crust."]}
+}},
+
+/* ---------- 6 ---------- */
+{id:"boundaries",icon:"⛰️",title:"Boundary Builder",lesson:"Plates and Land Features",blurb:"Everest, the Mariana Trench, and a rift splitting Africa.",
+ recap:["<b>Continent + continent</b> (convergent): neither sinks, so crust crumples into the Himalayas and the Tibetan Plateau.",
+  "<b>Ocean + ocean</b> (convergent): the older, denser plate <b>subducts</b>, forming a trench (Mariana) and an island arc.",
+  "<b>Divergent on land</b>: a rift valley (East African Rift). <b>Divergent at sea</b>: a mid-ocean ridge (about 60,000 km long).",
+  "<b>Hydrothermal vents</b>: superheated water kept from boiling by pressure; <b>chemosynthetic</b> bacteria power the food web.",
+  "<b>Transform</b>: plates slide past each other (San Andreas Fault)."],
+ nodes:{
+ start:{m:["Time to build some landforms. Plates meet in three ways: they <b>pull apart</b> (divergent), <b>slide past</b> (transform), or <b>push together</b> (convergent).",{fig:"boundaries"},
+   "Case 1: <b>Mount Everest</b>. The India Plate (continental crust) is crashing into the Eurasian Plate (also continental). What happens?"],
+  c:[["India sinks under Asia and makes a line of volcanoes","x_himsub"],
+     ["Neither one sinks. The crust crumples and stacks up into the Himalayas and the Tibetan Plateau.","trench",1],
+     ["They slide past each other","d_himtrans"]]},
+ x_himsub:{m:["Check two facts. Continental crust is <b>thick and light</b>, like a cork in water. And the Himalayas have <b>almost no volcanoes</b>.","Does sinking still fit?"],
+  c:[["No. It’s too buoyant to sink, and there are no volcanoes from melting.","d_himsub"]]},
+ d_himsub:D("Continents subduct","Subduction happens at lots of convergent boundaries, so it seems like the default.","Only dense <b>oceanic</b> crust sinks easily. When two continents collide, neither sinks, so the crust folds, breaks and piles up. That’s why Earth’s tallest mountains are here, with few volcanoes."),
+ d_himtrans:D("Sliding past","Some boundaries really do slide sideways.","Sliding past makes faults and earthquakes, not the world’s tallest mountains. India is moving head-on into Asia: a <b>convergent</b> collision."),
+ trench:{m:["Yes: continent vs. continent = crumple zone.","Case 2: the <b>Mariana Trench</b>, the deepest place on Earth. Two <b>oceanic</b> plates collide there. Which one dives?"],
+  c:[["The older, colder, denser plate sinks under the younger one","rift",1],["The younger, hotter plate sinks","d_young"],["Neither sinks. The trench is where the seafloor got pulled apart.","d_pullapart"]]},
+ d_young:D("The young plate sinks","You might guess the newer, thinner plate is weaker and gets pushed under.","Oceanic crust gets colder and denser as it ages and moves away from the ridge. The <b>older, denser</b> plate sinks, and that’s what forms the trench."),
+ d_pullapart:D("Trenches from pulling apart","A trench is a gap, so it seems like something got pulled apart.","Pulling apart lets magma rise and build a <b>ridge</b> (a mountain range), not a trench. Trenches form where one plate dives under another."),
+ rift:{m:["Right, and the sinking plate melts and feeds a curved chain of volcanic islands next to the trench (an <b>island arc</b>).",
+   "Case 3: the <b>East African Rift Valley</b>, a long, straight valley with volcanoes and lots of earthquakes. What’s happening there?"],
+  c:[["A river carved it","d_river"],["Plates are pulling apart on land. The crust stretches and drops, and it may someday become a new ocean.","ridge",1],["Two plates are colliding","d_collide"]]},
+ d_river:D("A river carved it","Rivers really do carve valleys, like the Grand Canyon.","River valleys wind around and don’t come with volcanoes. A rift is long and straight and lined with volcanoes and earthquakes: signs that the crust itself is being pulled apart."),
+ d_collide:D("Collisions make valleys","Collisions do reshape the land.","Collisions push land UP into mountains. A valley that drops down between faults means the crust is being stretched apart: a <b>divergent</b> boundary."),
+ ridge:{m:["Exactly. It’s the same process as the Mid-Atlantic Ridge, just on land.","Case 4: the <b>longest mountain range on Earth</b> is about 60,000 km long. Where is it?"],
+  c:[["The Andes","d_andes"],["Under the ocean: the mid-ocean ridge system","vents",1],["The Himalayas","d_himlong"]]},
+ d_andes:D("Longest = the Andes","The Andes ARE the longest range on land, about 7,000 km.","The mid-ocean ridge system winds about <b>60,000 km</b> around the globe, mostly underwater. That’s more than eight Andes laid end to end."),
+ d_himlong:D("Tallest = longest","The Himalayas are the tallest, so they feel like the biggest.","Tallest and longest aren’t the same thing. The longest range is the underwater mid-ocean ridge, about 60,000 km."),
+ vents:{m:["Yes! Most of the planet’s volcanic activity happens along it, out of sight.","Case 5: deep on the ridge, <b>hydrothermal vents</b> blast out water hotter than 350 °C, yet it doesn’t boil. Why not?"],
+  c:[["The salt keeps it from boiling","d_salt"],["The crushing pressure of the deep ocean","life",1]]},
+ d_salt:D("Salt stops boiling","Salt does raise the boiling point a little.","Salt only raises it by a degree or two. The real reason is <b>pressure</b>: kilometers of water pressing down keep the superheated water from turning to steam."),
+ life:{m:["Right: pressure. There’s no sunlight down there, yet the vents are packed with life: tube worms, shrimp, crabs.","What powers that food web?"],
+  c:[["Bacteria that make food from chemicals in the vent water (chemosynthesis)","sanandreas",1],["Photosynthesis, using light from the hot water","d_glow"]]},
+ d_glow:D("Photosynthesis in the dark","Plants make food from light, so it seems like every food web needs light.","There’s no usable sunlight kilometers down. <b>Chemosynthetic</b> bacteria break down chemicals like hydrogen sulfide for energy, and everything else eats them, or eats something that ate them."),
+ sanandreas:{m:["Exactly: a whole ecosystem powered by plate tectonics.","Final case: California’s <b>San Andreas Fault</b>. The Pacific Plate grinds northwest while the North American Plate moves the other way, side by side. Boundary type?"],
+  c:[["Convergent","d_sa1"],["Divergent","d_sa2"],["Transform","end",1]]},
+ d_sa1:D("Big quakes = convergent","California has big mountains and big earthquakes, which sounds like a collision.","Nothing is colliding head-on or sinking along the San Andreas. The plates grind past each other sideways: a <b>transform</b> boundary."),
+ d_sa2:D("A crack = pulling apart","You can see a long crack in the ground.","No new crust is forming and no valley is opening. The plates slide past each other horizontally: <b>transform</b>."),
+ end:{end:1,m:["Case closed. You can now look at a landform and work out <b>which way the plates moved</b> to build it."]}
+}},
+
+/* ---------- 7 ---------- */
+{id:"volcanoes",icon:"🌋",title:"Volcano Forensics",lesson:"Volcanoes · Plates and Volcanoes",blurb:"Three suspects, one hotspot, and a rule that breaks.",
+ recap:["<b>Stratovolcano</b> (composite): steep, layered, sticky magma, explosive (Mount St. Helens, Arenal). Over half of all volcanoes.",
+  "<b>Shield</b>: broad and gentle, runny lava, quiet eruptions (Mauna Loa). <b>Cinder cone</b>: small, steep, loose cinders (Parícutin).",
+  "<b>Volcanic arc</b>: an oceanic plate subducts under a continent and partly melts about 100 km (60 mi) down (Cascades).",
+  "<b>Hotspots</b> make volcanoes in the middle of plates. The plate moves over a fixed plume, building a chain (Hawaii, ~10 cm/yr).",
+  "<b>Divergent</b> boundaries make volcanoes too (Iceland on the Mid-Atlantic Ridge)."],
+ nodes:{
+ start:{m:["Volcano detectives, we have three mystery suspects. Quick vocabulary: a volcano is <b>active</b> if it has erupted in the last 10,000 years, <b>dormant</b> if it hasn’t, and <b>extinct</b> if it’s never expected to erupt again.",{fig:"volcanoes"},
+   "Suspect 1: tall and cone-shaped with steep sides, built from <b>layers</b> of ash and lava. Thick, sticky magma. <b>Explosive</b> eruptions. What type?"],
+  c:[["Shield volcano","d_v1"],["Stratovolcano (composite)","v2",1],["Cinder cone","d_v1b"]]},
+ d_v1:D("Explosive = shield","Shield volcanoes are huge, so they seem like the dangerous ones.","Shield volcanoes have RUNNY lava that spreads into broad, gentle slopes and erupts quietly. Sticky magma + layers + explosions = <b>stratovolcano</b>."),
+ d_v1b:D("Every steep cone is a cinder cone","Cinder cones are steep too.","Cinder cones are small and built from loose chunks of lava (cinders). Big, layered cones of ash AND lava are <b>stratovolcanoes</b>, like Mount St. Helens or Arenal."),
+ v2:{m:["Correct: a stratovolcano, like Arenal in Costa Rica. More than half of Earth’s volcanoes are this type.","Suspect 2: <b>Mauna Loa</b>, Hawaii. Huge, broad, and gently sloped. Runny lava flows for kilometers. Eruptions are mostly quiet. Type?"],
+  c:[["Shield volcano","v3",1],["Stratovolcano","d_v2"]]},
+ d_v2:D("Big = stratovolcano","Mauna Loa is enormous, and stratovolcanoes are famous giants.","Size isn’t the clue; shape and lava are. Runny (low-viscosity) lava spreads out in thin sheets and builds a wide dome, like a knight’s <b>shield</b> lying on the ground."),
+ v3:{m:["Yes: a shield volcano.","Suspect 3: in 1943, a volcano started growing out of a <b>cornfield</b> in Parícutin, Mexico. It’s a small, steep hill made of loose chunks of lava. Type?"],
+  c:[["Cinder cone","where",1],["Shield volcano","d_v3"]]},
+ d_v3:D("Any lava volcano is a shield","It erupted lava, and shields are lava volcanoes.","Shields are broad and gentle and take a very long time to build. A small, steep pile of lava chunks that grew in just a few years is a <b>cinder cone</b>."),
+ where:{m:["All three suspects identified!","Now <b>location</b>. Mount St. Helens is one of a line of volcanoes in the <b>Cascade Range</b> of Washington and Oregon. Why are they there?"],
+  c:[["A hotspot sits under Washington","d_cascadehot"],
+     ["The Juan de Fuca Plate (oceanic) dives under North America. Deep down, it partly melts and the magma rises.","hawaii",1],
+     ["The plates are pulling apart there","d_cascadediv"]]},
+ d_cascadehot:D("A hotspot under the Cascades","Hotspots do make volcanoes, and Yellowstone isn’t that far away.","A hotspot makes a chain that gets older in one direction. The Cascades run in a line <b>parallel to the coast</b>, right above where an ocean plate is sinking. That’s a volcanic arc."),
+ d_cascadediv:D("Pulling apart","Magma has to come up somewhere.","Pulling apart makes ridges and rift valleys with runny lava. The Cascades have explosive stratovolcanoes with sticky magma, the signature of <b>subduction</b>."),
+ hawaii:{m:["That’s a <b>volcanic arc</b>. The sinking plate partly melts about 100 km (60 miles) down, and the lighter magma rises.",{fig:"subduction"},
+   "Now a puzzle. Hawaii sits in the <b>middle</b> of the Pacific Plate, thousands of kilometers from any boundary.","Your rule says <i>volcanoes form at plate boundaries</i>. Keep the rule?"],
+  c:[["Keep it. There must be a hidden boundary under Hawaii.","x_hidden"],["Revise it. A hotspot (a plume of extra-hot mantle) can punch up through the middle of a plate.","speed",1]]},
+ x_hidden:{m:["Let’s check. Seafloor maps show <b>no boundary</b> near Hawaii: no ridge, no trench.",
+   "And the islands get <b>older in a neat line</b> toward the northwest: under 1 million years for the Big Island, about 5 million for Kauai. A boundary wouldn’t do that."],
+  c:[["Okay, the hidden-boundary idea doesn’t hold up","d_hidden"]]},
+ d_hidden:D("Every volcano sits on a boundary","Most volcanoes ARE on boundaries, so it feels like a law.","Most isn’t all. A good scientist <b>revises the rule</b> when the evidence breaks it. A hotspot is a plume of hot mantle that stays put. As the plate slides over it, it builds a chain of volcanoes that get older with distance."),
+ speed:{m:["That’s real scientific thinking: the evidence broke the rule, so you revised it.",{fig:"hotspot"},
+   {math:{given:[["Kauai’s age","~5,000,000 yr"],["Distance from the hotspot","~500 km"],["1 km","100,000 cm"]],formula:"rate = distance ÷ time"}},
+   "How fast is the Pacific Plate moving over the hotspot?"],
+  c:[["About 1 cm per year","d_hspeed"],["About 10 cm per year","iceland",1,["Convert: 500 km × 100,000 = 50,000,000 cm","Divide: 50,000,000 ÷ 5,000,000 = 10 cm/yr","That’s one of Earth’s fastest plates, several times faster than the Atlantic spreads."]],["About 100 km per year","d_hspeed2"]]},
+ d_hspeed:D("Lost a zero","With this many zeros, it’s easy to drop one.","500 km is 50,000,000 cm (×100,000). Then 50,000,000 ÷ 5,000,000 = <b>10 cm/yr</b>."),
+ d_hspeed2:D("Forgot to convert","500 ÷ 5 = 100 is right there.","Watch both units: it’s 5,000,000 years, not 5, and km must become cm. At 100 km per year, Hawaii would cross the whole Pacific in about a century!"),
+ iceland:{m:["10 cm a year, so Kauai has ridden about 500 km away from the hotspot.","Last suspect: <b>Iceland</b> has dozens of volcanoes and is splitting down the middle, with North America on one side and Eurasia on the other. Boundary type?"],
+  c:[["Convergent","d_ice1"],["Divergent: the Mid-Atlantic Ridge rising above sea level, with extra magma underneath","end",1]]},
+ d_ice1:D("Volcanoes + quakes = collision","Volcanoes and earthquakes together sound like a collision zone.","Iceland is literally being pulled apart. You can stand in the rift valley between the two plates. Magma wells up where they separate: <b>divergent</b>."),
+ end:{end:1,m:["Case closed. Volcano type tells you about the <b>magma</b>, and volcano location tells you about the <b>plates</b>."]}
+}},
+
+/* ---------- 8 ---------- */
+{id:"quakes",icon:"📈",title:"The Quake Files",lesson:"Plates and Earthquakes · Discussion",blurb:"Why does the West Coast shake? Close the unit’s first question.",
+ recap:["Plates lock along a <b>fault</b>, stress builds, and the rock suddenly slips, releasing seismic waves.",
+  "The <b>focus</b> (hypocenter) is underground where the rock slips. The <b>epicenter</b> is on the surface directly above it.",
+  "Strength by boundary: <b>convergent > transform > divergent</b>. About 90% of quakes happen around the Ring of Fire.",
+  "Each whole magnitude step = <b>10× bigger waves</b> (about 32× more energy).",
+  "Undersea subduction quakes can lift the seafloor and cause <b>tsunamis</b> (Sumatra, 2004).",
+  "Earthquakes <b>can’t be predicted</b>, so prepare: <b>Drop, Cover, and Hold On</b>."],
+ nodes:{
+ start:{m:["Final file. Two plates are locked together along a <b>fault</b>, a crack in Earth’s crust. The plates keep moving, but their rough edges are stuck.","What builds up?"],
+  c:[["Stress. The rock bends and stores energy until it suddenly slips.","focus",1],["Heat, until it explodes","d_heatq"],["Nothing. Earthquakes are just random.","d_random2"]]},
+ d_heatq:D("Earthquakes are explosions","Quakes release a huge amount of energy all at once, like an explosion.","It’s energy stored in bent rock, like a stretched rubber band, not heat. When friction can’t hold any longer, the rock snaps past and the energy leaves as <b>seismic waves</b>."),
+ d_random2:D("Earthquakes are random","We can’t predict exactly when they’ll happen.","Their timing is hard to predict, but their LOCATION isn’t random at all. About 90% happen around the <b>Ring of Fire</b>, along plate boundaries where stress builds."),
+ focus:{m:["Right: stored energy released all at once.",{fig:"quake"},"Name the two points: where the rock first slips underground, and the spot on the surface directly above it."],
+  c:[["Underground = epicenter; surface = focus","d_swap"],["Underground = focus (hypocenter); surface = epicenter","rank",1]]},
+ d_swap:D("Focus and epicenter swapped","Both sound like “the center,” so they blur together.","“Epi-” means “on top of.” The <b>epicenter</b> is on the surface, directly above the <b>focus</b>. The focus (hypocenter) is the underground spot where the rock slips."),
+ rank:{m:["Correct. The epicenter often gets the worst damage.","Rank the boundary types by how strong their earthquakes usually are, <b>strongest first</b>:"],
+  c:[["Transform > convergent > divergent","d_rank1"],["Convergent > transform > divergent","mag",1],["Divergent > transform > convergent","d_rank2"]]},
+ d_rank1:D("The San Andreas is strongest","California’s transform quakes are the most famous in the U.S.","Famous isn’t strongest. The biggest quakes ever recorded, Chile 1960 (M9.5) and Alaska 1964 (M9.2), came from subduction zones at <b>convergent</b> boundaries. Transform boundaries make medium-strength quakes."),
+ d_rank2:D("Spreading means shaking","New crust tearing open sounds violent.","At divergent boundaries, the crust is thin and hot, so it can’t store much stress before it breaks. Those earthquakes are the <b>weakest</b>."),
+ mag:{m:["Yes: convergent boundaries make the monsters.","Magnitude math! On the magnitude scale, each whole number up means the shaking (the size of the seismic waves) is <b>10 times</b> bigger.",
+   {math:{given:[["Quake A","magnitude 5"],["Quake B","magnitude 7"],["Each +1","10× bigger waves"]],formula:"× 10 for every whole step"}},
+   "How many times bigger is the shaking from quake B?"],
+  c:[["2 times","d_mag1"],["20 times","d_mag2"],["100 times","tsunami",1,["Steps apart: 7 − 5 = 2","Multiply: 10 × 10 = 100× bigger waves","Energy grows even faster (about 32× per step), so B releases about 1,000× the energy of A!"]]]},
+ d_mag1:D("Magnitude works like a ruler","7 − 5 = 2, so it feels like 2× bigger.","The scale isn’t evenly spaced. Each step <b>multiplies</b> by 10, so two steps = 10 × 10 = <b>100×</b> bigger waves."),
+ d_mag2:D("Adding the tens","Two steps of “10×” sounds like 10 + 10.","Each step MULTIPLIES. Step 1: ×10. Step 2: ×10 again. 10 × 10 = <b>100</b>, not 20."),
+ tsunami:{m:["100×! That’s why a magnitude 9 is in a whole different league.","December 2004: a magnitude 9.1 earthquake struck a subduction zone <b>under the ocean</b> near Sumatra, Indonesia. What was the deadliest result?"],
+  c:[["A new volcano formed","d_newvolc"],["A tsunami. The seafloor suddenly lifted, shoving the ocean water above it into huge waves that crossed the Indian Ocean.","predict",1]]},
+ d_newvolc:D("Quakes make instant volcanoes","Subduction zones do have volcanoes nearby.","Earthquakes don’t build new volcanoes on the spot. When a subduction quake lifts the seafloor, it shoves the whole column of water above it up, and that makes a <b>tsunami</b>."),
+ predict:{m:["Yes. The tsunami killed about 230,000 people in 14 countries.","A video goes viral: <i>“Scientists predict a major earthquake will hit your town next Tuesday.”</i> Should you trust it?"],
+  c:[["Yes. Seismologists can predict the time and place.","d_predict"],["No. Scientists can give long-term odds and seconds of warning, but not exact predictions.","drop",1]]},
+ d_predict:D("Earthquakes can be predicted","The weather can be forecast days ahead, so it seems like quakes should be too.","No one can predict the exact time and place of an earthquake. Scientists estimate long-term <b>chances</b> (like a percent chance over 30 years), and warning systems detect the fast P waves to give a few <b>seconds</b> of warning before stronger shaking arrives. Viral “predictions” are fake."),
+ drop:{m:["Right. That’s why <b>preparing</b> matters more than predicting.","The ground starts shaking during class. What’s the best move?"],
+  c:[["Run outside as fast as you can","d_run"],["Stand in a doorway","d_door"],["Drop to the floor, take Cover under a desk, and Hold On","why",1]]},
+ d_run:D("Run outside","Getting out of the building feels safest.","Many injuries happen when people try to move during shaking and get hit by falling glass or debris near walls and exits. <b>Drop, Cover, and Hold On</b> until the shaking stops."),
+ d_door:D("The doorway myth","Old photos showed door frames still standing in collapsed adobe houses.","In modern buildings, doorways aren’t stronger than other spots, and a swinging door can hit you. Getting under a sturdy desk protects you from falling objects."),
+ why:{m:["Drop, Cover, and Hold On. 👍","Last question, and it’s the one from the very start of this unit: why does the <b>West Coast</b> of the U.S. get so many earthquakes?"],
+  c:[["Ocean waves crashing on the coast shake the ground","d_waves"],["Plates meet there. The Pacific Plate grinds past North America along the San Andreas, and the Juan de Fuca Plate subducts farther north.","end",1]]},
+ d_waves:D("The ocean shakes the coast","The coast is where the ocean meets the land, so the ocean seems like the cause.","Waves can’t shake solid crust enough to cause earthquakes. The real reason is <b>plate boundaries</b>: the Pacific Plate grinds past North America along the San Andreas, and the Juan de Fuca Plate dives under the Pacific Northwest."),
+ end:{end:1,m:["Case closed, and so is the question that started Unit 8. The West Coast shakes because it sits on <b>plate boundaries</b>."]}
+}}
+];
+
+/* ================= FIGURES (schematic SVGs) ================= */
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" fill="${o.c||'#F1EFF8'}" font-size="${o.fs||13}" font-family="${o.mono?'SF Mono,Consolas,monospace':'-apple-system,Segoe UI,Roboto,sans-serif'}" text-anchor="${o.a||'middle'}" font-weight="${o.w||400}">${s}</text>`;
+const ARROW=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FFD37E"/></marker><marker id="ahc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#63E0D4"/></marker><marker id="ahm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FF7A3D"/></marker><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a2e14"/><stop offset="1" stop-color="#d9541f"/></linearGradient></defs>`;
+const FIG={
+ stripes(){
+  const W=[34,16,26,12,30,18,22];let s="",x=320-20;
+  s+=`<rect x="300" y="40" width="40" height="120" fill="#F6B44C"/>`;
+  let r=340,l=300,n=false;
+  W.forEach(w=>{const c=n?"#F6B44C":"#4a4f9a";s+=`<rect x="${r}" y="40" width="${w}" height="120" fill="${c}"/><rect x="${l-w}" y="40" width="${w}" height="120" fill="${c}"/>`;r+=w;l-=w;n=!n});
+  return `<svg viewBox="0 0 640 230" role="img" aria-label="Magnetic stripes mirrored on both sides of a mid-ocean ridge">${ARROW}
+  ${s}<path d="M320 24 L320 176" stroke="#FF7A3D" stroke-width="4" stroke-dasharray="6 5"/>
+  ${T(320,18,"RIDGE · new crust",{c:"#FF7A3D",w:700,mono:1,fs:12})}
+  <path d="M290 196 L180 196" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/><path d="M350 196 L460 196" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/>
+  ${T(320,200,"youngest",{c:"#FFD37E",fs:12})}${T(120,200,"older",{fs:12})}${T(520,200,"older",{fs:12})}
+  <rect x="20" y="212" width="14" height="10" fill="#F6B44C"/>${T(40,221,"normal (points north, like today)",{a:"start",fs:12})}
+  <rect x="330" y="212" width="14" height="10" fill="#4a4f9a"/>${T(350,221,"reversed (field had flipped)",{a:"start",fs:12})}
+  </svg>`},
+ convection(){return `<svg viewBox="0 0 640 260" role="img" aria-label="Mantle convection cells under plates">${ARROW}
+  <rect x="20" y="62" width="600" height="160" fill="url(#mg)" rx="6"/>
+  <path d="M20 222 Q320 182 620 222 L620 250 L20 250Z" fill="#FFD37E" opacity=".85"/>${T(320,244,"hot core (+ radioactive decay in rock)",{c:"#2a0c00",w:700,fs:12})}
+  <path d="M30 40 L306 40 L306 62 L30 62Z" fill="#3FB8A8"/><path d="M334 40 L610 40 L610 62 L334 62Z" fill="#3FB8A8"/>
+  <path d="M30 40 L10 40 L10 62" fill="none"/>
+  ${T(170,56,"plate",{c:"#04231f",w:700})}${T(470,56,"plate",{c:"#04231f",w:700})}
+  <path d="M320 205 L320 72" stroke="#FFD37E" stroke-width="3" marker-end="url(#ah)"/>
+  <path d="M310 80 C240 80 120 80 70 110" stroke="#FFD37E" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+  <path d="M330 80 C400 80 520 80 570 110" stroke="#FFD37E" stroke-width="3" fill="none" marker-end="url(#ah)"/>
+  <path d="M60 120 C55 170 120 200 300 205" stroke="#63E0D4" stroke-width="3" fill="none" marker-end="url(#ahc)"/>
+  <path d="M580 120 C585 170 520 200 340 205" stroke="#63E0D4" stroke-width="3" fill="none" marker-end="url(#ahc)"/>
+  <path d="M296 40 L306 30 L320 22 L334 30 L344 40" fill="none" stroke="#FF7A3D" stroke-width="3"/>
+  ${T(320,16,"RIDGE · plates pull apart (divergent)",{c:"#FF7A3D",w:700,fs:12,mono:1})}
+  ${T(320,140,"hot rock rises",{c:"#FFD37E",w:700})}${T(320,156,"(less dense)",{c:"#FFD37E",fs:12})}
+  ${T(110,170,"cool rock sinks",{c:"#63E0D4",w:700})}${T(110,186,"(denser, gravity)",{c:"#63E0D4",fs:12})}
+  ${T(530,170,"cool rock sinks",{c:"#63E0D4",w:700})}
+  ${T(36,32,"↓ sinking: convergent",{a:"start",c:"#63E0D4",fs:11,mono:1})}${T(604,32,"convergent ↓",{a:"end",c:"#63E0D4",fs:11,mono:1})}
+  </svg>`},
+ boundaries(){return `<svg viewBox="0 0 640 220" role="img" aria-label="Divergent, convergent and transform boundaries">${ARROW}
+  <g>${T(105,22,"DIVERGENT",{c:"#FF7A3D",w:700,mono:1,fs:12})}${T(105,38,"pull apart",{c:"#A6A3C8",fs:12})}
+   <rect x="20" y="80" width="75" height="34" fill="#3FB8A8"/><rect x="115" y="80" width="75" height="34" fill="#3FB8A8"/>
+   <path d="M105 170 C100 140 110 120 105 86" stroke="#FF7A3D" stroke-width="10" fill="none" stroke-linecap="round"/>
+   <path d="M80 66 L30 66" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/><path d="M130 66 L180 66" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/>
+   ${T(105,196,"ridges · rift valleys",{fs:12})}</g>
+  <g>${T(320,22,"CONVERGENT",{c:"#FF7A3D",w:700,mono:1,fs:12})}${T(320,38,"push together",{c:"#A6A3C8",fs:12})}
+   <path d="M228 80 L320 80 L400 160 L380 172 L310 104 L228 104Z" fill="#4a4f9a"/>
+   <path d="M322 70 L412 70 L412 104 L340 104 Z" fill="#9B6B43"/>
+   <path d="M330 70 L345 52 L360 70Z" fill="#9B6B43"/>
+   <path d="M240 66 L290 66" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/><path d="M405 58 L372 58" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/>
+   ${T(320,196,"trenches · mountains · arcs",{fs:12})}</g>
+  <g>${T(535,22,"TRANSFORM",{c:"#FF7A3D",w:700,mono:1,fs:12})}${T(535,38,"slide past (top view)",{c:"#A6A3C8",fs:12})}
+   <rect x="462" y="52" width="70" height="120" fill="#3FB8A8"/><rect x="538" y="52" width="70" height="120" fill="#2a8f84"/>
+   <path d="M535 52 L531 80 L539 104 L531 130 L539 172" stroke="#FF7A3D" stroke-width="3" fill="none"/>
+   <path d="M497 150 L497 74" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/><path d="M573 74 L573 150" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/>
+   ${T(535,196,"faults · earthquakes",{fs:12})}</g>
+  </svg>`},
+ subduction(){return `<svg viewBox="0 0 640 250" role="img" aria-label="An oceanic plate subducting under a continent">${ARROW}
+  <rect x="0" y="60" width="300" height="28" fill="#1a4f7a" opacity=".55"/>${T(120,52,"ocean",{c:"#63E0D4",fs:12})}
+  <path d="M0 88 L280 88 L470 230 L430 240 L262 112 L0 112Z" fill="#4a4f9a"/>${T(120,104,"oceanic plate (denser)",{fs:12,w:700})}
+  <path d="M300 88 L640 88 L640 130 L340 130 Z" fill="#9B6B43"/>
+  <path d="M300 88 L360 88 L400 50 L430 34 L460 50 L500 88 L640 88" fill="#9B6B43"/>
+  <path d="M430 34 L424 22 M430 34 L436 20" stroke="#FF7A3D" stroke-width="3"/>
+  ${T(560,116,"continental plate (lighter)",{fs:12,w:700})}
+  ${T(282,80,"trench",{c:"#63E0D4",fs:12,a:"end"})}<path d="M284 84 L292 90" stroke="#63E0D4" stroke-width="2"/>
+  <circle cx="420" cy="190" r="9" fill="#FF7A3D"/><circle cx="426" cy="160" r="7" fill="#FF7A3D" opacity=".85"/><circle cx="430" cy="128" r="6" fill="#FF7A3D" opacity=".75"/>
+  <path d="M432 112 L432 60" stroke="#FF7A3D" stroke-width="4" stroke-dasharray="5 5"/>
+  ${T(520,200,"slab partly melts",{c:"#FF7A3D",w:700,fs:12})}${T(520,216,"~100 km (60 mi) down",{c:"#FF7A3D",fs:12})}
+  ${T(430,16,"volcanic arc",{c:"#FFD37E",w:700,fs:12})}
+  <path d="M120 140 L220 140" stroke="#FFD37E" stroke-width="2.5" marker-end="url(#ah)"/>
+  </svg>`},
+ volcanoes(){return `<svg viewBox="0 0 640 210" role="img" aria-label="Stratovolcano, shield volcano and cinder cone shapes">
+  <path d="M0 160 L640 160 L640 210 L0 210Z" fill="#22244d"/>
+  <path d="M30 160 C80 150 105 70 118 40 L132 40 C145 70 170 150 220 160Z" fill="#7a4a2e"/>
+  <path d="M60 140 C95 130 108 95 113 80 M180 140 C145 130 132 95 127 80" stroke="#c99a6a" stroke-width="2" fill="none"/>
+  <path d="M75 120 C100 112 110 90 115 70 M165 120 C140 112 130 90 125 70" stroke="#5a3520" stroke-width="2" fill="none"/>
+  <path d="M120 40 C110 20 140 12 132 2" stroke="#A6A3C8" stroke-width="6" fill="none" opacity=".6"/>
+  ${T(125,182,"STRATOVOLCANO",{c:"#FFD37E",w:700,mono:1,fs:12})}${T(125,198,"steep · layered · explosive",{fs:12})}
+  <path d="M240 160 C290 130 330 112 345 110 L365 110 C380 112 420 130 470 160Z" fill="#5a3a2a"/>
+  <path d="M300 136 C330 126 345 120 352 118" stroke="#FF7A3D" stroke-width="3" fill="none"/>
+  ${T(355,182,"SHIELD",{c:"#FFD37E",w:700,mono:1,fs:12})}${T(355,198,"broad · gentle · runny lava",{fs:12})}
+  <path d="M500 160 L545 102 L555 102 L600 160Z" fill="#3a2a2a"/><path d="M545 102 L550 108 L555 102" fill="#0A0B1C"/>
+  <circle cx="530" cy="140" r="3" fill="#FF7A3D"/><circle cx="565" cy="130" r="2.5" fill="#FF7A3D"/><circle cx="550" cy="150" r="2" fill="#FF7A3D"/>
+  ${T(550,182,"CINDER CONE",{c:"#FFD37E",w:700,mono:1,fs:12})}${T(550,198,"small · steep · cinders",{fs:12})}
+  </svg>`},
+ hotspot(){const isl=[[520,46,"0 · active"],[410,34,"~1 My"],[300,22,"~3 My"],[180,12,"~5 My · Kauai"]];
+  return `<svg viewBox="0 0 640 240" role="img" aria-label="A plate moving over a fixed hotspot builds a chain of islands">${ARROW}
+  <rect x="0" y="100" width="640" height="16" fill="#1a4f7a" opacity=".5"/>
+  ${isl.map(([x,h,l])=>`<path d="M${x-50} 100 Q${x} ${100-h*2} ${x+50} 100Z" fill="#5a3a2a"/>${T(x,100-h*2-8,l,{fs:12,c:x===520?"#FF7A3D":"#F1EFF8",w:x===520?700:400})}`).join("")}
+  <rect x="0" y="116" width="640" height="34" fill="#3FB8A8"/>${T(90,138,"Pacific Plate",{c:"#04231f",w:700})}
+  <path d="M400 133 L250 133" stroke="#04231f" stroke-width="3" marker-end="url(#ah)"/>${T(325,128,"plate moves",{c:"#04231f",fs:11,w:700})}
+  <path d="M500 230 C505 190 515 170 520 150 L530 150 C535 170 545 190 550 230Z" fill="#FF7A3D" opacity=".85"/>
+  <path d="M520 150 L522 108" stroke="#FF7A3D" stroke-width="5" stroke-dasharray="4 4"/>
+  ${T(600,200,"hotspot plume",{c:"#FF7A3D",w:700,fs:12})}${T(600,216,"stays put",{c:"#FF7A3D",fs:12})}
+  ${T(200,190,"← islands get older this way",{c:"#FFD37E",fs:13,w:700})}
+  </svg>`},
+ quake(){return `<svg viewBox="0 0 640 250" role="img" aria-label="Focus underground and epicenter directly above it">${ARROW}
+  <path d="M0 60 L640 60 L640 250 L0 250Z" fill="#3b2c22"/>
+  <path d="M0 40 L640 40 L640 60 L0 60Z" fill="#2f6a3a"/>
+  <path d="M250 40 L420 250" stroke="#FF7A3D" stroke-width="3" stroke-dasharray="8 6"/>${T(410,230,"fault",{c:"#FF7A3D",w:700,a:"end"})}
+  ${[30,58,86,114].map(r=>`<circle cx="330" cy="150" r="${r}" fill="none" stroke="#63E0D4" stroke-width="2" opacity="${1-r/150}"/>`).join("")}
+  <path d="M330 138 L334 147 L344 148 L336 154 L339 164 L330 158 L321 164 L324 154 L316 148 L326 147Z" fill="#FFD37E"/>
+  <path d="M330 136 L330 48" stroke="#FFD37E" stroke-width="2" stroke-dasharray="4 4"/>
+  <path d="M330 40 L322 26 L338 26Z" fill="#F0674F"/>
+  ${T(330,18,"EPICENTER · on the surface, directly above",{c:"#F0674F",w:700,fs:12,mono:1})}
+  ${T(470,150,"FOCUS (hypocenter)",{c:"#FFD37E",w:700,fs:12,mono:1,a:"start"})}${T(470,166,"where the rock slips",{c:"#FFD37E",fs:12,a:"start"})}
+  <path d="M466 152 L348 152" stroke="#FFD37E" stroke-width="1.5"/>
+  ${T(150,200,"seismic waves spread out",{c:"#63E0D4",fs:12})}
+  </svg>`}
+};
+const FIGCAP={stripes:"Magnetic stripes are mirror images on both sides of the ridge.",convection:"A convection cell in the mantle (not to scale).",boundaries:"The three kinds of plate boundaries.",subduction:"Subduction builds a trench and a volcanic arc.",volcanoes:"Shape is your first clue to the type of volcano.",hotspot:"The hotspot stays put while the plate slides over it.",quake:"The focus is underground; the epicenter is directly above it on the surface."};
+
+/* ================= STATE ================= */
+const $=s=>document.querySelector(s);
+const feed=$("#feed"),dock=$("#dock"),side=$("#side");
+const LET="ABCDE";
+const KEY="faultlines-u8-v1";
+let P={done:{},dead:{},pts:0};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.done)P=s}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
+let view="board",C=null,node=null,fork=null,forkPick=null,run={};
+let queue=[],busy=false,fast=false,live=false,score={chat:0,pl:0};
+const isMain=id=>!/^(x_|d_)/.test(id);
+const deadIds=c=>Object.keys(c.nodes).filter(k=>c.nodes[k].dead);
+const foundIn=c=>deadIds(c).filter(k=>P.dead[c.id]&&P.dead[c.id][k]);
+const totalDead=()=>CASES.reduce((a,c)=>a+deadIds(c).length,0);
+const foundDead=()=>CASES.reduce((a,c)=>a+foundIn(c).length,0);
+/* main-path forks in order */
+function mainPath(c){const out=[];let id="start",g=0;while(id&&!c.nodes[id].end&&g++<40){out.push(id);const ok=c.nodes[id].c.find(x=>x[2]&&isMain(x[1]));id=ok?ok[1]:null}return out}
+/* dead ends reachable from a choice without passing through another main fork */
+function reachDead(c,target){const seen=new Set(),res=[];const go=id=>{if(seen.has(id))return;seen.add(id);const n=c.nodes[id];if(!n)return;if(n.dead){res.push(id);return}if(isMain(id))return;(n.c||[]).forEach(ch=>go(ch[1]))};go(target);return res}
+
+/* ================= SOUND ================= */
+let AC,sound=true;
+function tone(f,d=.12,type="sine",w=0,v=.1){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime+w);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+w+d);o.connect(g).connect(AC.destination);o.start(AC.currentTime+w);o.stop(AC.currentTime+w+d+.02)}catch(e){}}
+const sfx={good:()=>{tone(660,.1);tone(990,.16,"sine",.08)},dead:()=>{tone(220,.18,"sawtooth",0,.05);tone(150,.3,"sawtooth",.12,.05)},pop:()=>tone(520,.05,"triangle",0,.04),
+ rewind:()=>[880,700,560,440].forEach((f,i)=>tone(f,.07,"triangle",i*.05,.06)),win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.22,"triangle",i*.1)),tick:()=>tone(880,.04,"square",0,.03)};
+$("#snd").onclick=()=>{sound=!sound;$("#snd").textContent=sound?"🔊":"🔇";$("#snd").setAttribute("aria-label",sound?"Mute sound":"Turn sound on")};
+
+/* ================= FX ================= */
+function toast(t,dead){const el=$("#toast");el.textContent=t;el.className="";void el.offsetWidth;el.className="show"+(dead?" dead":"");clearTimeout(el._t);el._t=setTimeout(()=>el.className="",1500)}
+const boom=$("#boom"),bx=boom.getContext("2d");let parts=[];
+function confetti(){const W=boom.width=innerWidth,H=boom.height=innerHeight;const cols=["#FFD37E","#F6B44C","#3FB8A8","#63E0D4","#FF7A3D","#A98BF0"];
+ for(let i=0;i<140;i++)parts.push({x:W/2+(Math.random()-.5)*200,y:H*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*12-4,s:4+Math.random()*6,c:cols[i%cols.length],r:Math.random()*6,life:120});
+ if(parts.length<=140)requestAnimationFrame(stepC)}
+function stepC(){bx.clearRect(0,0,boom.width,boom.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.r+=.1;p.life--;bx.save();bx.translate(p.x,p.y);bx.rotate(p.r);bx.fillStyle=p.c;bx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);bx.restore()});parts=parts.filter(p=>p.life>0&&p.y<boom.height+20);if(parts.length)requestAnimationFrame(stepC);else bx.clearRect(0,0,boom.width,boom.height)}
+/* background: slow drifting magma embers and faint plate cracks */
+(function(){const cv=$("#bg"),x=cv.getContext("2d");let W,H,em=[],cr=[];
+ const rs=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;cr=[];for(let k=0;k<4;k++){const pts=[];let px=-20,py=Math.random()*H;while(px<W+20){pts.push([px,py]);px+=40+Math.random()*60;py+=(Math.random()-.5)*60}cr.push(pts)}};
+ rs();addEventListener("resize",rs);
+ for(let i=0;i<46;i++)em.push({x:Math.random(),y:Math.random(),v:.0003+Math.random()*.0006,r:.6+Math.random()*1.8,a:Math.random()*6});
+ const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ (function f(){x.clearRect(0,0,W,H);x.lineWidth=1.2;x.strokeStyle="rgba(63,184,168,.08)";cr.forEach(p=>{x.beginPath();p.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.stroke()});
+  em.forEach(e=>{e.y-=e.v;e.a+=.02;if(e.y<-.02){e.y=1.02;e.x=Math.random()}const al=.25+.25*Math.sin(e.a);x.fillStyle=`rgba(255,${120+Math.round(60*Math.sin(e.a))},60,${al})`;x.beginPath();x.arc(e.x*W,e.y*H,e.r,0,7);x.fill()});
+  if(!reduce)requestAnimationFrame(f)})()})();
+
+/* ================= SCORE ================= */
+function addPts(n){P.pts=Math.max(0,P.pts+n);save();paintScore()}
+function paintScore(){$("#sIns").textContent=P.pts;$("#sDe").textContent=foundDead();$("#sChat").textContent=score.chat;$("#sPl").textContent=score.pl}
+const maxPts=()=>CASES.reduce((a,c)=>a+mainPath(c).length*10+deadIds(c).length*3,0);
+function rank(){const f=P.pts/maxPts();return f>=.85?"Plate Tectonics Pro":f>=.6?"Senior Seismologist":f>=.35?"Field Geologist":"Rookie Rock Hound"}
+
+/* ================= TRACK ================= */
+function paintTrack(){$("#track").innerHTML=CASES.map((c,i)=>`<button class="node ${P.done[c.id]?"done":""} ${C&&C.id===c.id&&view==="case"?"now":""}" data-c="${i}" title="Case ${i+1}: ${c.title}"><div class="d">${P.done[c.id]?"✓":""}</div><span>${c.title}</span></button>`).join("");
+ document.querySelectorAll(".node").forEach(b=>b.onclick=()=>openCase(+b.dataset.c))}
+
+/* ================= FEED HELPERS ================= */
+const scrollDown=()=>requestAnimationFrame(()=>feed.scrollTop=feed.scrollHeight);
+function add(html,cls=""){const d=document.createElement("div");if(cls)d.className=cls;d.innerHTML=html;feed.appendChild(d);scrollDown();return d}
+function terra(html){return add(`<div class="av" aria-hidden="true">🌍</div><div class="bub">${html}</div>`,"msg")}
+function me(html){return add(`<div class="bub"><small>YOU</small>${html}</div>`,"msg me")}
+function fig(k){return add(`<figure>${FIG[k]()}<figcaption>${FIGCAP[k]||""}</figcaption></figure>`,"figure")}
+function mathCard(m){return add(`<span class="tag vi">🧮 Plate math</span><div class="given">${m.given.map(([k,v])=>`<div class="row"><span>${k}</span><b>${v}</b></div>`).join("")}</div><div class="formula">${m.formula}</div>`,"mathcard")}
+function steps(arr){const ol=document.createElement("ol");ol.className="steps";ol.innerHTML=arr.map((s,i)=>`<li style="animation-delay:${i*.35}s"><b>${i<arr.length-1?"STEP "+(i+1):"SO…"}</b><span>${s}</span></li>`).join("");feed.appendChild(ol);scrollDown()}
+function chips(list){return add(list.map(([c,t])=>`<span class="chip ${c}">${t}</span>`).join(""),"chipline")}
+
+/* message queue with typing indicator */
+function say(items,done){queue=items.slice();busy=true;fast=false;dock.innerHTML=`<div class="hint">Tap the chat or press <span class="kbd">Space</span> to skip ahead</div>`;next(done)}
+function next(done){if(!queue.length){busy=false;done&&done();return}
+ const it=queue.shift();const len=typeof it==="string"?it.replace(/<[^>]+>/g,"").length:60;
+ const wait=fast||matchMedia("(prefers-reduced-motion: reduce)").matches?0:Math.min(1300,380+len*9);
+ let ty=null;if(wait>0){ty=add(`<div class="av" aria-hidden="true">🌍</div><div class="bub"><i></i><i></i><i></i></div>`,"msg typing")}
+ setTimeout(()=>{ty&&ty.remove();
+  if(typeof it==="string")terra(it);else if(it.fig)fig(it.fig);else if(it.math)mathCard(it.math);
+  sfx.pop();next(done)},wait)}
+feed.addEventListener("click",()=>{if(busy)fast=true});
+
+/* ================= CASE FLOW ================= */
+function openCase(i){C=CASES[i];view="case";run={};fork=null;forkPick=null;feed.innerHTML="";closeSide();
+ add(`<div class="n">Case ${i+1} of ${CASES.length} · ${C.lesson}</div><h2>${C.icon} ${C.title}</h2><p>${C.blurb}</p>`,"casehead");
+ if(P.done[C.id])add(`Replaying a closed case. Try the paths you skipped: ${deadIds(C).length-foundIn(C).length} dead ends still unmapped.`,"divider");
+ paintTrack();paintSide();go("start")}
+function go(id){node=id;const n=C.nodes[id];if(isMain(id)&&!n.end){fork=id}paintSide();
+ say(n.m||[],()=>{if(n.dead)showDead(id);else if(n.end)showEnd();else showChoices()})}
+function showChoices(){const n=C.nodes[node];const tried=run[node]||{};
+ const solo=n.c.length===1;
+ dock.innerHTML=`<div class="vote" id="vote"><span class="ask">💬 Chat vote: type <b style="color:var(--gold-bright)">${n.c.map((_,i)=>LET[i]).join(", ")}</b></span><span class="timer" id="vt">20</span></div>
+  <div class="choices">${n.c.map((ch,i)=>`<button class="choice ${tried[i]==="dead"?"tried":""} ${solo?"solo":""}" data-i="${i}">${solo?"":`<span class="L">${LET[i]}</span>`}<span>${ch[0]}</span>${tried[i]==="dead"?`<span class="tr">🚧 dead end</span>`:""}</button>`).join("")}</div>
+  <div class="hint">${solo?"Press <span class='kbd'>Enter</span>":"Pick with "+n.c.map((_,i)=>`<span class="kbd">${LET[i]}</span>`).join(" ")+" or tap"}${fork&&!isMain(node)?" · <span class='kbd'>R</span> rewind to the fork":""}</div>`;
+ dock.querySelectorAll(".choice").forEach(b=>b.onclick=()=>pick(+b.dataset.i));
+ startVote(solo);paintSide()}
+let vTimer=null;
+function startVote(solo){clearInterval(vTimer);const v=$("#vote");if(!v||!live||solo)return;v.classList.add("show");let t=20;const el=$("#vt");
+ vTimer=setInterval(()=>{t--;if(!el.isConnected){clearInterval(vTimer);return}el.textContent=t>0?t:"Time!";el.classList.toggle("low",t<=5);if(t<=5&&t>0)sfx.tick();if(t<=0)clearInterval(vTimer)},1000)}
+function pick(i){if(busy)return;clearInterval(vTimer);const n=C.nodes[node];const ch=n.c&&n.c[i];if(!ch)return;busy=true;
+ if(isMain(node))forkPick=i;
+ me(ch[0]);const tgt=ch[1];
+ const reachesMain=isMain(tgt);
+ if(ch[2]&&reachesMain){
+   const firstTry=!(run["_dead_"+fork]);
+   const gain=firstTry?10:5;
+   P.sc=P.sc||{};P.sc[C.id]=P.sc[C.id]||{};
+   const fresh=!P.sc[C.id][fork];
+   if(fresh){P.sc[C.id][fork]=1;addPts(gain)}
+   if(live&&firstTry&&!run["_live_"+fork]){run["_live_"+fork]=1;score.chat++;paintScore()}
+   (run[fork]=run[fork]||{})[forkPick]="ok";
+   chips([["good",firstTry?"✓ Solid reasoning"+(fresh?" +10":""):"✓ Back on track"+(fresh?" +5":"")]]);
+   sfx.good();
+   if(ch[3])steps(ch[3]);
+   (run._trail=run._trail||[]).push(["ok",LET[forkPick]]);
+ }
+ dock.innerHTML="";
+ setTimeout(()=>go(tgt),ch[3]?ch[3].length*350+500:350)}
+function showDead(id){const d=C.nodes[id].dead;const isNew=!(P.dead[C.id]&&P.dead[C.id][id]);
+ if(isNew){(P.dead[C.id]=P.dead[C.id]||{})[id]=1;addPts(3)}
+ run["_dead_"+fork]=1;(run[fork]=run[fork]||{})[forkPick]="dead";
+ (run._trail=run._trail||[]).push(["dead",LET[forkPick]]);
+ if(live){score.pl++;paintScore()}
+ sfx.dead();toast(isNew?"🚧 New dead end mapped":"🚧 Dead end",true);
+ add(`<span class="tag co">🚧 Dead end</span><h3>${d.t}</h3><div class="two"><div class="tempt"><b>Why it’s tempting</b>${d.tempt}</div><div class="fail"><b>Why it breaks</b>${d.fail}</div></div>${isNew?`<div class="new">+3 insight · added to your Dead-End Journal 📓</div>`:""}`,"deadend");
+ dock.innerHTML=`<div class="dockrow"><button class="btn co" id="rw">⟲ Rewind to the fork</button><span class="hint" style="margin:0">Dead ends are safe. Mapping them is how you learn why the right answer is right. <span class="kbd">R</span></span></div>`;
+ $("#rw").onclick=rewind;paintSide();paintScore()}
+function rewind(){if(!fork)return;sfx.rewind();add("⟲ Rewound to the fork","divider");
+ const n=C.nodes[fork];const q=[...n.m].reverse().find(x=>typeof x==="string");node=fork;terra(q);showChoices()}
+function showEnd(){const first=!P.done[C.id];P.done[C.id]=1;save();sfx.win();confetti();toast("🔍 Case closed!");
+ const fd=foundIn(C).length,td=deadIds(C).length;
+ add(`<span class="tag cy">🔍 Case closed</span><h3>${C.title}</h3><div style="color:var(--muted)">The reasoning chain you just built:</div><ol>${C.recap.map(r=>`<li>${r}</li>`).join("")}</ol>
+  <div class="stats"><div class="stat"><div class="k">Dead ends mapped</div><div class="v">${fd} / ${td}</div></div><div class="stat"><div class="k">Insight points</div><div class="v">${P.pts}</div></div><div class="stat"><div class="k">Cases closed</div><div class="v">${Object.keys(P.done).length} / ${CASES.length}</div></div></div>`,"closed");
+ const idx=CASES.indexOf(C);
+ dock.innerHTML=`<div class="dockrow">${idx<CASES.length-1?`<button class="btn" id="nx">Next case: ${CASES[idx+1].title} →</button>`:`<button class="btn" id="nx">🏆 See your unit results</button>`}
+  ${fd<td?`<button class="btn co" id="rp">🚧 Hunt the ${td-fd} dead end${td-fd>1?"s":""} you missed</button>`:""}<button class="btn ghost" id="bd">All cases</button></div>`;
+ $("#nx").onclick=()=>idx<CASES.length-1?openCase(idx+1):board();
+ const rp=$("#rp");if(rp)rp.onclick=()=>openCase(idx);$("#bd").onclick=board;
+ paintTrack();paintSide();paintScore()}
+
+/* ================= SIDE PANEL ================= */
+function paintSide(){if(view!=="case"||!C){side.innerHTML=boardSide();bindSide();return}
+ const mp=mainPath(C);const fd=foundIn(C),td=deadIds(C);
+ const rows=mp.map((id,k)=>{const n=C.nodes[id];const r=run[id]||{};
+  const dots=n.c.map((ch,i)=>{let cls="";if(ch[2]&&isMain(ch[1])){cls=(r[i]==="ok"||P.done[C.id])?"ok":""}else{const ds=reachDead(C,ch[1]);const got=ds.filter(d=>P.dead[C.id]&&P.dead[C.id][d]).length;cls=got&&got===ds.length?"dead":got?"part":""}
+   return `<span class="dot ${cls}" title="Choice ${LET[i]}"></span>`}).join("");
+  return `<div class="fork ${id===fork?"now":""}"><span class="lbl">${id===fork?"▶ ":""}Fork ${k+1}</span><span class="dots">${dots}</span></div>`}).join("");
+ side.innerHTML=`<button class="btn ghost mobile-only" id="closeSide">✕ Close map</button><div class="panel"><h4>Case map <span>${C.icon} ${C.title}</span></h4><div class="forks">${rows}</div>
+  <div class="legend"><span><i style="background:var(--good)"></i>solved</span><span><i style="background:var(--coral)"></i>dead end mapped</span><span><i style="background:var(--navy2);border:1.5px solid var(--line)"></i>unexplored</span></div></div>
+  <div class="panel"><h4>Dead ends in this case <span>${fd.length}/${td.length}</span></h4><div class="meter"><i style="width:${td.length?fd.length/td.length*100:0}%"></i></div>
+  <ul class="jlist" style="margin-top:10px">${td.map(k=>fd.includes(k)?`<li>${C.nodes[k].dead.t}</li>`:`<li class="locked">??? still hidden</li>`).join("")}</ul></div>
+  <div class="panel"><h4>Your path</h4><div class="trail">${(run._trail||[]).map(([c,l],i)=>`<span class="${c}">${c==="ok"?"✓":"🚧"} ${l}</span>`).join("")||`<span>Make your first choice</span>`}</div></div>
+  <button class="btn ghost" id="toBoard">← All cases</button>`;
+ bindSide()}
+function boardSide(){return `<div class="panel"><h4>Unit progress</h4><div style="font-family:var(--display);font-size:30px;font-weight:700">${Object.keys(P.done).length} / ${CASES.length} <span style="font-size:15px;color:var(--muted);font-family:var(--body);font-weight:400">cases closed</span></div><div class="meter"><i style="width:${Object.keys(P.done).length/CASES.length*100}%"></i></div>
+  <div style="margin-top:12px;font-family:var(--display);font-size:30px;font-weight:700;color:var(--coral)">${foundDead()} / ${totalDead()} <span style="font-size:15px;color:var(--muted);font-family:var(--body);font-weight:400">dead ends mapped</span></div><div class="meter"><i style="width:${foundDead()/totalDead()*100}%"></i></div>
+  <div class="rank" style="font-size:20px;margin-top:12px">${rank()}</div></div>
+  <div class="panel"><h4>For teachers</h4><p style="font-size:14px;line-height:1.45;color:var(--muted)">Press <b style="color:var(--ink)">📺 LIVE</b> to present: bigger text, a 20-second chat vote on every fork, and a <b style="color:var(--ink)">Chat vs Plates</b> score (a right first pick scores for Chat, a dead end scores for the Plates). Keys: <span class="kbd">A</span>–<span class="kbd">C</span> pick, <span class="kbd">R</span> rewind, <span class="kbd">Space</span> skip, <span class="kbd">Shift+C</span>/<span class="kbd">Shift+X</span> manual points.</p></div>
+  <button class="btn ghost" id="reset">↺ Reset my progress</button>`}
+function bindSide(){const cs=$("#closeSide");if(cs)cs.onclick=closeSide;const b=$("#toBoard");if(b)b.onclick=board;const r=$("#reset");if(r)r.onclick=()=>confirmReset()}
+function confirmReset(){openModal(`<h2>Reset progress?</h2><p class="sub">This clears your closed cases, dead-end journal and insight points on this device.</p><div class="dockrow"><button class="btn co" id="yes">Yes, reset</button><button class="btn ghost" id="no">Cancel</button></div>`);
+ $("#yes").onclick=()=>{P={done:{},dead:{},pts:0,sc:{}};save();closeModal();board()};$("#no").onclick=closeModal}
+function closeSide(){side.classList.remove("open")}
+$("#mapBtn").onclick=()=>{paintSide();side.classList.toggle("open")};
+
+/* ================= BOARD ================= */
+function board(){view="board";C=null;clearInterval(vTimer);closeSide();paintTrack();paintScore();
+ const all=Object.keys(P.done).length===CASES.length;
+ feed.innerHTML=`<div class="board"><div class="hero"><svg class="bigicon" width="96" height="96" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="url(#gE)" stroke="#3FB8A8" stroke-width="2"/><path d="M6 17 L14 20 L18 15 L25 21 L30 18 L38 23" fill="none" stroke="#FF7A3D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 30 L17 27 L22 31 L29 27 L35 30" fill="none" stroke="#FFD37E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div><div style="font-family:var(--mono);font-size:12px;letter-spacing:.22em;color:var(--cyan)">UNIT 8 · TECTONIC PLATES</div><h1>Every wrong turn is a clue.</h1><p>I’m <b style="color:var(--plate)">Terra</b>, your field geologist. Pick your answers, follow your own reasoning, and when an idea hits a dead end, rewind and try another path. Map the dead ends and you’ll know <i>why</i> the right answer is right.</p></div></div>
+  <div class="how"><div class="panel"><b>1 · CHOOSE</b><p>Every fork has one path that holds up and a few that don’t. Go with your gut first.</p></div><div class="panel"><b>2 · HIT A DEAD END</b><p>Wrong ideas play out until they break. You’ll see why each one is tempting and exactly where it fails.</p></div><div class="panel"><b>3 · REWIND & MAP</b><p>Rewind to the fork. Every new dead end you map goes in your 📓 journal for studying.</p></div></div>
+  <div class="cases">${CASES.map((c,i)=>{const fd=foundIn(c).length,td=deadIds(c).length;return `<button class="card ${P.done[c.id]?"done":""}" data-c="${i}"><span class="ic">${c.icon}</span><span class="num">Case ${i+1}</span><span class="ti">${c.title}</span><span class="le">${c.lesson}</span><span class="st">${P.done[c.id]?"✓ closed · ":""}🚧 ${fd}/${td} dead ends</span></button>`}).join("")}</div>
+  <div class="cleared panel ${all?"show":""}"><h2>🏆 Unit 8 cleared!</h2><div class="rank">${rank()}</div><p style="color:var(--muted);margin-top:8px">${P.pts} insight points · ${foundDead()} of ${totalDead()} dead ends mapped. ${foundDead()<totalDead()?"Replay a case to hunt the rest. They make great test prep.":"You mapped every single dead end. Incredible detective work."}</p></div></div>`;
+ feed.querySelectorAll(".card").forEach(b=>b.onclick=()=>openCase(+b.dataset.c));
+ const nextCase=CASES.findIndex(c=>!P.done[c.id]);
+ dock.innerHTML=`<div class="dockrow"><button class="btn" id="go1">${nextCase<0?"🔁 Replay Case 1":Object.keys(P.done).length?`▶ Continue: Case ${nextCase+1}, ${CASES[nextCase].title}`:"▶ Start Case 1: The Puzzle Continent"}</button><button class="btn ghost" id="jb2">📓 Dead-End Journal</button></div>`;
+ $("#go1").onclick=()=>openCase(nextCase<0?0:nextCase);$("#jb2").onclick=journal;
+ feed.scrollTop=0;paintSide()}
+
+/* ================= JOURNAL ================= */
+function openModal(h){$("#mbox").innerHTML=h;$("#modal").classList.add("show")}
+function closeModal(){$("#modal").classList.remove("show")}
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function journal(){openModal(`<div style="display:flex;justify-content:space-between;align-items:start;gap:12px"><div><h2>📓 Dead-End Journal</h2><p class="sub">Every misconception you’ve mapped: why it’s tempting, and why it breaks. ${foundDead()} of ${totalDead()} found.</p></div><button class="icon" id="mx" aria-label="Close">✕</button></div>
+ ${CASES.map(c=>{const ds=deadIds(c);return `<div class="jcase"><h3>${c.icon} ${c.title} · ${foundIn(c).length}/${ds.length}</h3>${ds.map(k=>{const f=P.dead[c.id]&&P.dead[c.id][k];const d=c.nodes[k].dead;return f?`<div class="jentry"><b>${d.t}</b><br><span class="t">Tempting because:</span> ${d.tempt}<br><span class="f"><b style="font-size:15px;font-family:var(--body);color:var(--coral)">Breaks because:</b> ${d.fail}</span></div>`:`<div class="jentry locked">??? Still hidden. Explore a different path in this case.</div>`}).join("")}</div>`}).join("")}`);
+ $("#mx").onclick=closeModal}
+$("#jBtn").onclick=journal;
+
+/* ================= LIVE MODE + KEYS ================= */
+$("#liveBtn").onclick=()=>{live=!live;document.body.classList.toggle("live",live);$("#liveBtn").classList.toggle("on",live);toast(live?"📺 Live mode on":"Live mode off");if(view==="case"&&!busy&&C&&C.nodes[node]&&C.nodes[node].c)startVote(C.nodes[node].c.length===1)};
+addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;const k=e.key.toLowerCase();
+ if(e.key==="Escape"){closeModal();closeSide();return}
+ if($("#modal").classList.contains("show"))return;
+ if(k===" "&&busy){e.preventDefault();fast=true;return}
+ if(view!=="case")return;
+ if(live&&e.shiftKey&&k==="c"){score.chat++;paintScore();sfx.good();return}
+ if(live&&e.shiftKey&&k==="x"){score.pl++;paintScore();sfx.dead();return}
+ if(k==="r"){const b=$("#rw");if(b)b.click();else if(fork&&!isMain(node)&&!busy)rewind();return}
+ const n=C.nodes[node];if(!n||!n.c||busy)return;
+ if(e.key==="Enter"&&n.c.length===1){pick(0);return}
+ const i=LET.toLowerCase().indexOf(k);const num="12345".indexOf(k);const idx=i>=0?i:num;
+ if(idx>=0&&idx<n.c.length&&!(e.target.closest&&e.target.closest("button")&&e.key==="Enter"))pick(idx)});
+
+paintScore();board();
+</script>
+</body></html>
