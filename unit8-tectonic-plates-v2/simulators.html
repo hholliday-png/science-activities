@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plate Simulators · Unit 8</title>
+<style>
+/* ===== Earth Science kit: shared look for every game page (navy + gold house style, accessible type) ===== */
+:root{
+  --navy:#0A0B1C; --navy2:#121430; --panel:#18193a; --panel2:#22244d;
+  --gold:#F6B44C; --gold-bright:#FFD37E; --coral:#F0674F; --cyan:#63E0D4; --violet:#A98BF0;
+  --ink:#F4F2FA; --muted:#B4B1D3; --line:#3a3c6c; --good:#8FE07A;
+  --magma:#FF7A3D; --plate:#3FB8A8;
+  --display:Georgia,'Times New Roman',serif;
+  --body:'Atkinson Hyperlegible',Verdana,Tahoma,'Segoe UI',sans-serif;
+  --mono:'SF Mono',Consolas,Monaco,monospace;
+  --r-common:#9fb3c8; --r-rare:#63E0D4; --r-epic:#A98BF0; --r-legendary:#FFD37E;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--navy);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.5;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+a{color:var(--gold-bright)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+#bg{position:fixed;inset:0;z-index:0;display:block}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 90% 55% at 50% 118%,rgba(255,110,40,.24),transparent 70%),radial-gradient(ellipse 70% 50% at 50% -5%,rgba(63,184,168,.16),transparent 70%)}
+#boom{position:fixed;inset:0;z-index:70;pointer-events:none;width:100%;height:100%}
+.wrap{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 16px 30px}
+
+/* header */
+.kitbar{position:relative;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 16px 8px;max-width:1100px;margin:0 auto}
+.kitbar .brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;text-decoration:none;overflow:hidden}
+.kitbar .brand svg{width:40px;height:40px;flex:none}
+.kitbar .k{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kitbar .t{font-family:var(--display);font-size:21px;font-weight:700;color:var(--gold-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player{display:flex;align-items:center;gap:8px;background:rgba(24,25,58,.88);border:1.5px solid var(--line);border-radius:100px;padding:4px 14px 4px 5px;flex:none}
+.player .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:radial-gradient(circle at 35% 35%,#ffe7ad,#F6B44C 60%,#9a6512)}
+.player .lv{font-size:12px;color:var(--muted);line-height:1.1}
+.player .lv b{color:var(--gold-bright);font-size:14px}
+.xpbar{width:100px;height:8px;border-radius:100px;background:var(--panel2);overflow:hidden;margin-top:3px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--plate),var(--gold),var(--magma));transition:width .5s}
+.icon{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:rgba(24,25,58,.88);font-size:17px;flex:none;position:relative;display:grid;place-items:center;text-decoration:none}
+.icon.on{border-color:var(--cyan);background:rgba(99,224,212,.18)}
+.icon .badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* building blocks */
+.panel{background:rgba(24,25,58,.88);border:1.5px solid var(--line);border-radius:20px;padding:16px 18px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px;border-radius:100px;color:#1a1200;background:linear-gradient(135deg,var(--gold-bright),var(--gold));width:max-content}
+.tag.vi{background:linear-gradient(135deg,#cbb8ff,var(--violet));color:#160b33}
+.tag.co{background:linear-gradient(135deg,#ffb09f,var(--coral));color:#2a0700}
+.tag.cy{background:linear-gradient(135deg,#9af0f0,var(--cyan));color:#04231f}
+h1.title{font-family:var(--display);font-size:38px;line-height:1.1;color:#fff}
+h2.title{font-family:var(--display);font-size:28px;line-height:1.15;color:#fff}
+.sub{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:17px;padding:12px 20px;border-radius:14px;background:linear-gradient(135deg,var(--gold-bright),var(--gold));color:#1a1200;box-shadow:0 4px 18px rgba(246,180,76,.3);transition:transform .12s,filter .2s;text-decoration:none}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn.ghost{background:rgba(24,25,58,.85);color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.btn.co{background:linear-gradient(135deg,#ffb09f,var(--coral));color:#2a0700}
+.btn.pl{background:linear-gradient(135deg,#8ff0e2,var(--plate));color:#04231f}
+.btn.vi{background:linear-gradient(135deg,#cbb8ff,var(--violet));color:#160b33}
+.btn.big{font-size:20px;padding:14px 26px}
+.btn:disabled{opacity:.4;cursor:default;transform:none;filter:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tbtn{font-size:15px;font-weight:700;padding:7px 12px;border-radius:100px;border:1.5px solid var(--line);background:rgba(24,25,58,.9)}
+.tbtn:hover{border-color:var(--cyan)}
+.tbtn.hint{border-color:var(--gold);color:var(--gold-bright)}
+.choices{display:grid;gap:10px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;background:rgba(24,25,58,.94);border:2.5px solid var(--line);border-radius:18px;padding:11px 16px;line-height:1.3;font-size:20px;transition:border-color .2s,transform .12s;min-height:58px;width:100%}
+.choice:hover{border-color:var(--gold);transform:translateY(-2px)}
+.choice .L{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:21px;color:#1a1200;background:linear-gradient(135deg,var(--gold-bright),var(--gold))}
+.choice.right{border-color:var(--good);background:rgba(143,224,122,.16)}
+.choice.wrong{border-color:var(--coral);background:rgba(240,103,79,.14)}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:14px;font-size:18px;display:none}
+.feedback.show{display:block;animation:pop .3s ease}
+.feedback.good{background:rgba(143,224,122,.14);border:2px solid var(--good)}
+.feedback.bad{background:rgba(240,103,79,.12);border:2px solid var(--coral)}
+.q{font-family:var(--display);font-size:25px;color:#fff;line-height:1.25;margin-bottom:12px}
+.mathbox{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid var(--violet);background:rgba(24,25,58,.94);margin-bottom:12px}
+.mathbox .given div{display:flex;justify-content:space-between;gap:10px;font-size:17px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.mathbox .given b{color:var(--gold-bright)}
+.mathbox .formula{font-size:17px;font-weight:700;color:var(--cyan);background:rgba(99,224,212,.1);border:2px solid rgba(99,224,212,.45);border-radius:12px;padding:10px;text-align:center;align-self:start}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.dmg{position:fixed;left:50%;top:30%;transform:translateX(-50%);font-family:var(--display);font-weight:700;font-size:44px;color:var(--gold-bright);text-shadow:0 0 20px rgba(255,122,61,.8);pointer-events:none;z-index:60;animation:dmg 1.1s ease forwards;white-space:nowrap}
+@keyframes dmg{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-60px) scale(1)}}
+body.quake .wrap{animation:quake .5s ease}
+@keyframes quake{20%{transform:translate(-8px,4px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-6px,2px)}80%{transform:translate(4px,-2px)}}
+
+/* cards */
+.tcard{width:150px;border-radius:16px;padding:10px;text-align:center;background:linear-gradient(160deg,#22244d,#121430);border:3px solid var(--r-common);display:flex;flex-direction:column;gap:4px;align-items:center}
+.tcard .ci{font-size:46px;line-height:1.1;margin:6px 0}
+.tcard .cn{font-family:var(--display);font-weight:700;font-size:17px;color:#fff;line-height:1.15}
+.tcard .cr{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+.tcard .cf{font-size:13px;color:var(--muted);line-height:1.3}
+.tcard .cu{font-size:11px;color:var(--cyan)}
+.tcard.common{border-color:var(--r-common)} .tcard.common .cr{color:var(--r-common)}
+.tcard.rare{border-color:var(--r-rare);box-shadow:0 0 18px rgba(99,224,212,.25)} .tcard.rare .cr{color:var(--r-rare)}
+.tcard.epic{border-color:var(--r-epic);box-shadow:0 0 22px rgba(169,139,240,.35)} .tcard.epic .cr{color:var(--r-epic)}
+.tcard.legendary{border-color:var(--r-legendary);box-shadow:0 0 30px rgba(255,211,126,.5);background:linear-gradient(160deg,#4a3410,#121430)} .tcard.legendary .cr{color:var(--r-legendary)}
+.tcard.lockedc{filter:grayscale(1);opacity:.45}
+.tcard.lockedc .ci{filter:brightness(0)}
+.binder{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;justify-items:center}
+.reveal{display:grid;place-items:center;gap:14px;text-align:center}
+.reveal .tcard{width:220px;animation:flip .8s ease}
+.reveal .tcard .ci{font-size:70px}
+.reveal .tcard .cn{font-size:22px}
+.reveal .tcard .cf{font-size:15px}
+@keyframes flip{0%{transform:rotateY(90deg) scale(.6)}60%{transform:rotateY(-10deg) scale(1.05)}100%{transform:none}}
+
+/* modal + toast */
+#modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(6,6,18,.82);backdrop-filter:blur(4px);padding:16px}
+#modal.show{display:flex}
+#modal .box{width:min(880px,100%);max-height:88vh;overflow-y:auto;background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:22px}
+#modal h2{font-family:var(--display);font-size:30px;color:#fff}
+.mtop{display:flex;justify-content:space-between;align-items:start;gap:12px}
+#toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:66;font-family:var(--display);font-weight:700;font-size:23px;color:#1a0800;background:linear-gradient(135deg,var(--gold-bright),var(--magma));padding:10px 24px;border-radius:100px;box-shadow:0 10px 40px rgba(255,122,61,.45);display:none;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#toast.show{display:block;animation:tpop .5s ease}
+#toast.bad{background:linear-gradient(135deg,#ffb09f,var(--coral))}
+#toast.cy{background:linear-gradient(135deg,#9af0f0,var(--plate))}
+@keyframes tpop{0%{transform:translateX(-50%) scale(.4);opacity:0}50%{transform:translateX(-50%) scale(1.1);opacity:1}100%{transform:translateX(-50%) scale(1)}}
+
+@media (max-width:640px){
+  body{font-size:18px}
+  .kitbar{padding:8px 10px 6px;gap:6px}
+  .kitbar .k,.kitbar .brand svg{display:none}
+  .kitbar .t{font-size:18px}
+  .player{padding:3px 10px 3px 3px;gap:6px}
+  .player .xpbar{width:56px}
+  .player .lv span{display:none}
+  .icon{width:36px;height:36px;font-size:15px}
+  h1.title{font-size:28px}
+  .q{font-size:21px}
+  .choice{font-size:18px;padding:10px 12px;min-height:52px}
+  .mathbox{grid-template-columns:1fr}
+  .tcard{width:140px}
+  .wrap{padding:0 8px 24px}
+  #toast{white-space:normal;text-align:center;font-size:18px;border-radius:18px;width:92vw;padding:10px 14px}
+}
+
+/* ===== flair kit ===== */
+#fxc{position:fixed;inset:0;z-index:75;pointer-events:none}
+.terra2{display:flex;align-items:flex-end;gap:8px;pointer-events:none}
+.terra2 svg{width:72px;height:82px;flex:none;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
+.terra2.cheer svg{animation:tjump .6s ease 2}.terra2.worried svg{animation:twob .5s ease 2}.terra2.wow svg{animation:tjump .4s ease 1}
+@keyframes tjump{40%{transform:translateY(-16px) rotate(-6deg)}}
+@keyframes twob{25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.terra2 .eye{transform-origin:center;transform-box:fill-box;animation:tblink 4s infinite}
+@keyframes tblink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.tb2{background:rgba(255,251,233,.97);color:#1a1530;border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:17px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-bottom:34px;max-width:560px}
+.tb2 b{color:#a0430f}
+.tb2.pop{animation:pop .3s ease}
+.dnd-ghost{position:fixed;z-index:85;pointer-events:none;transform:translate(-50%,-50%) rotate(-4deg) scale(1.06);box-shadow:0 18px 40px rgba(0,0,0,.6);transition:opacity .1s}
+[data-drag]{touch-action:none;cursor:grab;user-select:none}
+[data-drag].lifting{opacity:.35}
+[data-drag].picked{outline:3px solid var(--cyan);outline-offset:3px;animation:pickp .8s ease-in-out infinite alternate}
+@keyframes pickp{to{transform:translateY(-4px)}}
+[data-drop].dropready{outline:3px dashed rgba(255,211,126,.7);outline-offset:4px}
+[data-drop].dropover{outline:3px solid var(--gold-bright);background:rgba(246,180,76,.18)!important;transform:scale(1.03)}
+.pulse{animation:pls 1.6s ease-in-out infinite}
+@keyframes pls{50%{box-shadow:0 0 0 10px rgba(240,103,79,0),0 0 30px rgba(240,103,79,.6);transform:scale(1.03)}}
+.metal{background:linear-gradient(160deg,#2b2e5a,#15173a 60%,#1d2048);border:2px solid #4a4d84;border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 16px 40px rgba(0,0,0,.45);position:relative}
+.metal::before,.metal::after{content:"";position:absolute;top:10px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c9cce8,#5a5d8c);box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.metal::before{left:10px}.metal::after{right:10px}
+@media (max-width:640px){.terra2 svg{width:46px;height:52px}.tb2{font-size:15px;margin-bottom:10px;padding:8px 12px}}
+
+/* ===== one-screen app layout (laptops + Chromebooks). Phones keep the stacked, scrolling layout. ===== */
+@media (min-width:900px){
+ body.app{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+ body.app .kitbar{flex:none;padding:6px 16px 4px;max-width:none;width:100%}
+ body.app .kitbar .brand svg{width:34px;height:34px}
+ body.app .kitbar .t{font-size:19px}
+ body.app .icon{width:36px;height:36px;font-size:15px}
+ body.app .wrap{flex:1;min-height:0;max-width:none;width:100%;padding:0 14px 10px;display:flex;flex-direction:column}
+ body.app .fitbox{flex:1;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center}
+ body.app .fitbox>.scene{flex:none}
+ body.app .q{font-size:20px;margin-bottom:8px}
+ body.app .choice{font-size:17px;min-height:44px;padding:7px 12px;gap:10px}
+ body.app .choice .L{width:32px;height:32px;font-size:18px;border-radius:9px}
+ body.app .choices{gap:7px}
+ body.app .mathbox{padding:8px 10px;gap:8px;margin-bottom:8px}
+ body.app .mathbox .given div{font-size:15px;padding:2px 0}
+ body.app .mathbox .formula{font-size:15px;padding:6px}
+ body.app .tb2{font-size:15px;padding:8px 12px;margin-bottom:24px}
+ body.app .terra2 svg{width:56px;height:64px}
+}
+@media (min-width:900px) and (max-height:640px){
+ body.app .kitbar .k{display:none}
+ body.app .q{font-size:18px}
+ body.app .choice{font-size:16px;min-height:40px;padding:5px 10px}
+}
+@media (min-width:900px) and (max-height:720px){ body.app .kitbar .k{display:none} body.app .btn{padding:8px 16px;font-size:17px} }
+
+.simhead{text-align:center;margin:6px 0 10px}
+.simtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.simtab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;border-radius:20px;border:2px solid var(--line);background:linear-gradient(160deg,rgba(34,36,77,.95),rgba(10,11,28,.85));transition:transform .15s,border-color .2s}
+.simtab span{font-size:36px}.simtab b{font-family:var(--display);font-size:20px;color:#fff}.simtab small{color:var(--muted)}
+.simtab:hover{transform:translateY(-3px);border-color:var(--gold)}
+.simtab.on{border-color:var(--gold);background:linear-gradient(160deg,rgba(246,180,76,.25),rgba(10,11,28,.85));box-shadow:0 0 24px rgba(246,180,76,.3)}
+.tbwrap{min-height:90px;margin-bottom:8px}
+.scene{border-radius:22px;overflow:hidden;border:2px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.scene canvas{width:100%;display:block;background:#0b1030;touch-action:none}
+#qc{cursor:crosshair}
+.missions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.mission{font-size:15px;padding:7px 12px;border-radius:100px;border:1.5px solid var(--line);background:rgba(24,25,58,.9)}
+.mission i{font-style:normal}
+.mission.got{border-color:var(--good);background:rgba(143,224,122,.15);box-shadow:0 0 14px rgba(143,224,122,.3)}
+.mission.plain{border-style:dashed}
+.console2{padding:20px}
+.screen{background:#04101c;border:2px solid #1f4a5a;border-radius:14px;padding:6px 10px;box-shadow:inset 0 0 30px rgba(99,224,212,.12)}
+.screen svg{width:100%;height:auto;display:block;cursor:crosshair}
+.sl{display:flex;gap:10px;align-items:baseline;font-family:var(--mono);font-weight:700;color:var(--cyan);font-size:14px;letter-spacing:.1em;flex-wrap:wrap}
+.gap{margin-left:auto;color:var(--muted);font-size:14px;letter-spacing:0;font-family:var(--body);font-weight:400}.gap b{color:var(--gold-bright);font-size:16px}
+#qlQ{margin-top:12px}
+.sliders{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:16px;align-items:center}
+.sl2{display:grid;gap:4px}
+.sl2>span{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);font-weight:700}
+.sl2 b{font-size:17px;color:var(--gold-bright)}.sl2 small{color:var(--muted);font-size:13px}
+.sl2 input{width:100%;height:34px;accent-color:var(--magma)}
+.result{margin-top:10px;padding:14px 18px;border-radius:18px;border:2px solid var(--plate);background:linear-gradient(135deg,rgba(63,184,168,.2),rgba(24,25,58,.95));display:none}
+.result.show{display:block;animation:pop .35s ease}
+.result h3{font-family:var(--display);font-size:26px;color:#fff}
+.srgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.srctl{display:grid;gap:14px}
+.leverbox{display:flex;gap:14px;align-items:center}
+.lever{width:64px;height:110px;border-radius:16px;background:linear-gradient(180deg,#1a1d3c,#0d0f22);border:2px solid #4a4d84;position:relative;flex:none;box-shadow:inset 0 4px 14px rgba(0,0,0,.6)}
+.lever .knob{position:absolute;left:50%;top:14px;width:36px;height:36px;margin-left:-18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe7ad,#F6B44C 60%,#9a6512);box-shadow:0 6px 12px rgba(0,0,0,.6);transition:top .25s cubic-bezier(.5,1.8,.5,1)}
+.lever::before{content:"";position:absolute;left:50%;top:30px;bottom:30px;width:6px;margin-left:-3px;background:#3a3d70;border-radius:4px}
+.lever.down .knob{top:58px;background:radial-gradient(circle at 35% 35%,#cbd0ff,#6a70c8 60%,#2a2f78)}
+.tbtn.on{border-color:var(--gold);color:var(--gold-bright);background:rgba(246,180,76,.15)}
+.q{font-size:21px}
+@media (max-width:860px){.sliders{grid-template-columns:1fr}.srgrid{grid-template-columns:1fr}.simtab small{display:none}.simtab b{font-size:15px}.simtab span{font-size:28px}.simtab{padding:8px}}
+
+@media (min-width:900px){
+ .simhead{display:none}
+ .simtabs{flex:none;margin-bottom:8px;gap:8px}
+ .simtab{flex-direction:row;justify-content:center;gap:10px;padding:5px 12px;border-radius:14px}
+ .simtab span{font-size:26px}.simtab b{font-size:17px}.simtab small{font-size:13px}
+ .sim{flex:1;min-height:0;display:flex;gap:12px}
+ .sim[style*="none"]{display:none!important}
+ .simL{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+ .simL .missions{flex:none;margin:6px 0 0;gap:6px}
+ .mission{font-size:13.5px;padding:4px 10px}
+ .simR{width:420px;flex:none;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px}
+ .simR .tbwrap{min-height:0;margin:0;flex:none}
+ .simR .console2{padding:12px 14px}
+ .sliders{grid-template-columns:1fr;gap:8px}
+ .sl2{grid-template-columns:110px 1fr;column-gap:10px;row-gap:0;align-items:center}
+ .sl2>span{grid-row:1/3}.sl2 input{height:26px}.sl2 b{font-size:15px}.sl2 small{grid-column:2;font-size:12px}
+ .sliders #vbBtn{width:100%}
+ .result{margin:0;padding:10px 14px}
+ .result h3{font-size:21px}
+ .srgrid{grid-template-columns:1fr;gap:10px}
+ .srctl{gap:8px}
+ .lever{width:52px;height:84px}.lever .knob{width:30px;height:30px;margin-left:-15px;top:10px}.lever.down .knob{top:44px}.lever::before{top:24px;bottom:24px}
+ #qlQ{margin-top:8px}
+ .simR .q{font-size:18px}
+}
+@media (min-width:900px) and (max-width:1200px){.simR{width:360px}.simtab small{display:none}}
+@media (min-width:900px) and (max-height:700px){.simR .terra2 svg{width:46px;height:52px}}
+@media (min-width:900px){#vbRes{display:none!important}}
+#qlBox .sl{min-height:2.9em;align-items:flex-start}
+
+
+/* ===== VISUAL POLISH v2 — Nov 2026: per-sim accent frames, richer look, more interaction ===== */
+#s_quake .scene{border-color:rgba(99,224,212,.55);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 28px rgba(99,224,212,.18)}
+#s_volcano .scene{border-color:rgba(255,122,61,.55);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 28px rgba(255,122,61,.18)}
+#s_stripe .scene{border-color:rgba(169,139,240,.55);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 28px rgba(169,139,240,.18)}
+.simtab:active{transform:scale(.96)}
+.lever:hover{border-color:var(--gold)}
+.mission.got{animation:pop .4s ease}
+.btn:active,.tbtn:active{transform:scale(.96)}
+
+</style></head><body>
+<div class="wrap">
+ <div class="simhead"><h1 class="title">🧪 Plate Simulators</h1><p class="sub">Real experiments, hands-on. Finish the missions to earn cards!</p></div>
+ <div class="simtabs" role="tablist">
+  <button class="simtab on" data-t="quake"><span>📍</span><b>Quake Locator</b><small>Find the epicenter</small></button>
+  <button class="simtab" data-t="volcano"><span>🌋</span><b>Volcano Builder</b><small>Make it erupt</small></button>
+  <button class="simtab" data-t="stripe"><span>🧲</span><b>Stripe Recorder</b><small>Read the seafloor</small></button>
+ </div>
+ <div class="tbwrap"><div id="sterra"></div></div>
+
+ <section class="sim" id="s_quake">
+  <div class="simL"><div class="fitbox" id="fb_qc"><div class="scene"><canvas id="qc" width="1200" height="560" aria-label="Map with three seismograph stations"></canvas></div></div>
+  <div class="missions"><span class="mission" id="mq1"><i>⬜</i> Find an epicenter</span><span class="mission" id="mq3"><i>⬜</i> Find all 3 epicenters</span><span class="mission plain">📍 Found <b id="qlFound">0</b>/3 · Quake #<b id="qlNum">1</b></span></div></div>
+  <div class="simR"><div class="metal console2" id="qlBox"></div></div>
+ </section>
+
+ <section class="sim" id="s_volcano" style="display:none">
+  <div class="simL"><div class="fitbox" id="fb_vc"><div class="scene"><canvas id="vc" width="1200" height="560" aria-label="Volcano building area with the magma chamber underground"></canvas></div></div>
+  <div class="missions"><span class="mission" id="mv1"><i>⬜</i> Shield volcano</span><span class="mission" id="mv2"><i>⬜</i> Stratovolcano</span><span class="mission" id="mv3"><i>⬜</i> Cinder cone</span><span class="mission" id="mv4"><i>⬜</i> ❓ Secret volcano</span></div></div>
+  <div class="simR"><div class="result" id="vbRes"></div>
+  <div class="metal console2 sliders">
+   <label class="sl2"><span>1 · Lava</span><input type="range" id="vbL" min="0" max="100" value="20"><b id="vbLo"></b><small>💧 runny ⟷ 🍯 sticky</small></label>
+   <label class="sl2"><span>2 · Gas</span><input type="range" id="vbG" min="0" max="100" value="20"><b id="vbGo"></b><small>🫧 little ⟷ 💨 lots</small></label>
+   <label class="sl2"><span>3 · Eruptions</span><input type="range" id="vbM" min="1" max="6" value="5"><b id="vbMo"></b><small>1 ⟷ 6</small></label>
+   <button class="btn co big pulse" id="vbBtn">🌋 ERUPT!</button>
+  </div></div>
+ </section>
+
+ <section class="sim" id="s_stripe" style="display:none">
+  <div class="simL"><div class="fitbox" id="fb_sc"><div class="scene"><canvas id="sc" width="1200" height="560" aria-label="Seafloor stripes growing from a ridge, with a research ship above"></canvas></div></div>
+  <div class="missions"><span class="mission" id="ms1"><i>⬜</i> Record 4 flips</span><span class="mission" id="ms4"><i>⬜</i> Read stripes with the ship</span><span class="mission" id="ms2"><i>⬜</i> Stripe math</span><span class="mission" id="ms3"><i>⬜</i> Slow vs. fast</span></div></div>
+  <div class="simR"><div class="metal console2 srgrid">
+   <div class="srctl">
+    <button class="btn pl big" id="srPlay">▶ Spread the seafloor</button>
+    <div class="leverbox"><button class="lever" id="srLever" aria-label="Flip Earth’s magnetic field"><span class="knob"></span></button><div><b>Flip Earth’s field</b><div id="srField" class="kb">🧭 Earth’s field: <b style="color:#FFD37E">NORMAL (points north)</b></div></div></div>
+    <div class="row"><button class="tbtn on" data-sp="1">🐢 Slow</button><button class="tbtn" data-sp="3">🐇 Fast</button><span class="kb">Flips: <b id="srFlips" style="color:var(--gold-bright)">0</b></span><button class="tbtn" id="srReset">↺ Clear</button></div>
+   </div>
+   <div id="srQ"><p class="sub">Press ▶ to spread. Pull the lever a few times while it spreads. Then <b>drag the ship</b> to read the stripes!</p></div>
+  </div></div>
+ </section>
+</div>
+
+<script>
+/* ===== Earth Science kit (shared JS). One-off play: NOTHING is saved or sent anywhere.
+   XP, cards and settings live only in this open tab and disappear when it closes. ===== */
+const $=s=>document.querySelector(s);
+const S={xp:0,cards:{},read:false};
+const RANKS=[["Rookie Rock Hound","🪨",0],["Pebble Pro","🔹",40],["Fossil Finder","🦴",100],["Magma Master","🔥",180],["Plate Pilot","🧭",280],["Quake Captain","⚡",400],["Planetary Scientist","🌍",550]];
+function rankIdx(x=S.xp){let r=0;RANKS.forEach((k,i)=>{if(x>=k[2])r=i});return r}
+
+/* header */
+function kitHeader(kicker,title,home){
+ const h=document.createElement("header");h.className="kitbar";
+ h.innerHTML=`<a class="brand" href="${home||"index.html"}" aria-label="Back to the unit page"><svg viewBox="0 0 44 44" aria-hidden="true"><defs><radialGradient id="gE" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#7ff0e2"/><stop offset=".6" stop-color="#2a8f84"/><stop offset="1" stop-color="#13403b"/></radialGradient></defs><circle cx="22" cy="22" r="19" fill="url(#gE)" stroke="#3FB8A8" stroke-width="2"/><path d="M6 17 L14 20 L18 15 L25 21 L30 18 L38 23" fill="none" stroke="#FF7A3D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 30 L17 27 L22 31 L29 27 L35 30" fill="none" stroke="#FFD37E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div style="min-width:0"><div class="k">${kicker}</div><div class="t">${title}</div></div></a>
+  <div class="player" title="Your rank this session"><span class="av" id="pAv">🪨</span><div class="lv"><b id="pLv">Lv 1</b> <span id="pRk">Rookie</span><div class="xpbar"><i id="pXp" style="width:0%"></i></div></div></div>
+  <button class="icon" id="readBtn" aria-label="Read to me">🗣️</button>
+  <button class="icon" id="binderBtn" aria-label="Cards">🃏<span class="badge" id="cardBadge" style="display:none">0</span></button>
+  <button class="icon" id="snd" aria-label="Mute sound">🔊</button>`;
+ document.body.insertBefore(h,document.body.firstChild.nextSibling);
+ $("#readBtn").onclick=()=>{S.read=!S.read;$("#readBtn").classList.toggle("on",S.read);hush();toast(S.read?"🗣️ Read to me: ON":"Read to me: OFF","cy");if(S.read)speak("I will read everything out loud for you.")};
+ $("#snd").onclick=()=>{sound=!sound;$("#snd").textContent=sound?"🔊":"🔇"};
+ $("#binderBtn").onclick=binder;paintPlayer()}
+function paintPlayer(){const r=rankIdx();const lo=RANKS[r][2],hi=r<RANKS.length-1?RANKS[r+1][2]:lo+1;
+ $("#pAv").textContent=RANKS[r][1];$("#pLv").textContent="Lv "+(r+1);$("#pRk").textContent=RANKS[r][0];
+ $("#pXp").style.width=(r<RANKS.length-1?Math.min(100,(S.xp-lo)/(hi-lo)*100):100)+"%";
+ const n=Object.keys(S.cards).length;const b=$("#cardBadge");b.textContent=n;b.style.display=n?"grid":"none"}
+function addXP(n){if(n<=0)return;const before=rankIdx();S.xp+=n;paintPlayer();floatText("+"+n+" XP","#8ff0e2","42%");
+ const after=rankIdx();if(after>before)setTimeout(()=>{toast("🏅 Rank up! "+RANKS[after][1]+" "+RANKS[after][0]);confetti();sfx.win()},700)}
+
+/* sound + speech */
+let AC,sound=true;
+function tone(f,d=.12,type="sine",w=0,v=.1){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime+w);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+w+d);o.connect(g).connect(AC.destination);o.start(AC.currentTime+w);o.stop(AC.currentTime+w+d+.02)}catch(e){}}
+const sfx={good:()=>{tone(660,.1);tone(990,.16,"sine",.08)},bad:()=>{tone(220,.18,"sawtooth",0,.05);tone(150,.3,"sawtooth",.12,.05)},pop:()=>tone(520,.05,"triangle",0,.035),
+ win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.22,"triangle",i*.1)),card:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.18,"sine",i*.08,.08)),
+ hit:()=>{tone(90,.25,"sawtooth",0,.12);tone(1200,.08,"square",0,.04)},rumble:()=>{tone(55,.6,"sawtooth",0,.1);tone(70,.5,"triangle",.05,.12)},
+ build:()=>{tone(300,.06,"square",0,.05);tone(450,.08,"square",.06,.05)},click:()=>tone(900,.03,"square",0,.03),
+ splash:()=>{for(let i=0;i<6;i++)tone(200+Math.random()*600,.12,"sine",i*.04,.04)},unlock:()=>[400,600,800].forEach((f,i)=>tone(f,.1,"triangle",i*.07,.08))};
+const plain=h=>{const d=document.createElement("div");d.innerHTML=h;return d.textContent.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,"").trim()};
+function speak(h,force){if(!(S.read||force))return;try{const u=new SpeechSynthesisUtterance(plain(h));u.rate=.92;u.lang="en-US";speechSynthesis.speak(u)}catch(e){}}
+function hush(){try{speechSynthesis.cancel()}catch(e){}}
+
+/* fx */
+function toast(t,kind){const el=$("#toast");el.textContent=t;el.className="";void el.offsetWidth;el.className="show"+(kind?" "+kind:"");clearTimeout(el._t);el._t=setTimeout(()=>el.className="",1800)}
+function floatText(t,c,top){const f=document.createElement("div");f.className="dmg";f.style.color=c||"";f.style.fontSize="34px";if(top)f.style.top=top;f.textContent=t;document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
+function bigText(t,c){const f=document.createElement("div");f.className="dmg";f.style.color=c||"";f.textContent=t;document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
+function quake(){document.body.classList.remove("quake");void document.body.offsetWidth;document.body.classList.add("quake");setTimeout(()=>document.body.classList.remove("quake"),600)}
+const boom=document.createElement("canvas");boom.id="boom";const bx=boom.getContext("2d");let parts=[];
+function confetti(){if(!boom.isConnected)document.body.appendChild(boom);const W=boom.width=innerWidth,H=boom.height=innerHeight;const cols=["#FFD37E","#F6B44C","#3FB8A8","#63E0D4","#FF7A3D","#A98BF0"];const first=!parts.length;
+ for(let i=0;i<140;i++)parts.push({x:W/2+(Math.random()-.5)*200,y:H*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*12-4,s:5+Math.random()*6,c:cols[i%6],r:Math.random()*6,life:130});
+ if(first)requestAnimationFrame(stepC)}
+function stepC(){bx.clearRect(0,0,boom.width,boom.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.r+=.1;p.life--;bx.save();bx.translate(p.x,p.y);bx.rotate(p.r);bx.fillStyle=p.c;bx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);bx.restore()});parts=parts.filter(p=>p.life>0&&p.y<boom.height+20);if(parts.length)requestAnimationFrame(stepC);else bx.clearRect(0,0,boom.width,boom.height)}
+(function(){const cv=document.createElement("canvas");cv.id="bg";document.body.prepend(cv);const g=document.createElement("div");g.className="glow";cv.after(g);
+ const t=document.createElement("div");t.id="toast";document.body.appendChild(t);
+ const m=document.createElement("div");m.id="modal";m.setAttribute("role","dialog");m.innerHTML='<div class="box" id="mbox"></div>';document.body.appendChild(m);
+ m.addEventListener("click",e=>{if(e.target.id==="modal"&&!$("#cardOk"))closeModal()});
+ const x=cv.getContext("2d");let W,H,em=[],cr=[];
+ const rs=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;cr=[];for(let k=0;k<4;k++){const pts=[];let px=-20,py=Math.random()*H;while(px<W+20){pts.push([px,py]);px+=40+Math.random()*60;py+=(Math.random()-.5)*60}cr.push(pts)}};
+ rs();addEventListener("resize",rs);
+ for(let i=0;i<40;i++)em.push({x:Math.random(),y:Math.random(),v:.0003+Math.random()*.0006,r:.6+Math.random()*1.8,a:Math.random()*6});
+ const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ (function f(){x.clearRect(0,0,W,H);x.lineWidth=1.2;x.strokeStyle="rgba(63,184,168,.08)";cr.forEach(p=>{x.beginPath();p.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.stroke()});
+  em.forEach(e=>{e.y-=e.v;e.a+=.02;if(e.y<-.02){e.y=1.02;e.x=Math.random()}x.fillStyle=`rgba(255,${120+Math.round(60*Math.sin(e.a))},60,${.25+.25*Math.sin(e.a)})`;x.beginPath();x.arc(e.x*W,e.y*H,e.r,0,7);x.fill()});
+  if(!reduce)requestAnimationFrame(f)})()})();
+
+/* modal + cards */
+function openModal(h){$("#mbox").innerHTML=h;$("#modal").classList.add("show")}
+function closeModal(){$("#modal").classList.remove("show")}
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#cardOk"))closeModal();if(e.key==="Enter"&&$("#cardOk")){e.preventDefault();$("#cardOk").click()}});
+let cardQ=[],cardOpen=false;
+function cardHTML(c,locked){return `<div class="tcard ${c.r} ${locked?"lockedc":""}"><div class="cr">${c.r}</div><div class="ci">${c.i}</div><div class="cn">${locked?"???":c.n}</div><div class="cf">${locked?(c.how||"Keep playing to unlock"):c.f}</div></div>`}
+const modalBusy=()=>$("#modal").classList.contains("show");
+function whenFree(fn){modalBusy()?setTimeout(()=>whenFree(fn),250):fn()}
+function unlockCard(id){const c=CARDS[id];if(!c||S.cards[id])return false;S.cards[id]=1;paintPlayer();cardQ.push(id);if(!cardOpen){cardOpen=true;whenFree(nextCard)}return true}
+function nextCard(){const id=cardQ.shift();if(!id){cardOpen=false;return}cardOpen=true;const c=CARDS[id];sfx.card();if(c.r!=="common")confetti();
+ openModal(`<div class="reveal"><div class="tag cy">🃏 New card!</div>${cardHTML(c)}<button class="btn big" id="cardOk">Awesome!</button></div>`);
+ speak("New card! "+c.n+". "+c.f);$("#cardOk").onclick=()=>{closeModal();setTimeout(()=>whenFree(nextCard),150)};$("#cardOk").focus()}
+function binder(){const ids=Object.keys(CARDS);const got=ids.filter(i=>S.cards[i]).length;
+ openModal(`<div class="mtop"><div><h2>🃏 Cards</h2><p class="sub">${got} of ${ids.length} collected this time. Cards reset when you close the page.</p></div><button class="icon" id="mx" aria-label="Close">✕</button></div><div class="binder" style="margin-top:12px">${ids.map(i=>cardHTML(CARDS[i],!S.cards[i])).join("")}</div>`);
+ $("#mx").onclick=closeModal}
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const LET="ABCDE";
+/* fit a canvas inside its box (keeps the aspect ratio) on laptops; full width on phones */
+const APPMQ=matchMedia("(min-width:900px)");
+function fitCanvas(cv,box){const ar=cv.width/cv.height;const f=()=>{if(!APPMQ.matches){cv.style.width="100%";cv.style.height="auto";return}const w=box.clientWidth-4,h=box.clientHeight-4;if(!w||!h)return;let cw=w,ch=w/ar;if(ch>h){ch=h;cw=h*ar}cv.style.width=Math.floor(cw)+"px";cv.style.height=Math.floor(ch)+"px"};
+ try{new ResizeObserver(f).observe(box)}catch(e){}addEventListener("resize",f);APPMQ.addEventListener&&APPMQ.addEventListener("change",f);f();return f}
+document.body.classList.add("app");
+
+/* ===== Flair kit: animated Terra, screen-space particles, drag-and-drop (shared by every page) ===== */
+const TERRA_SVG=`<svg viewBox="0 0 44 50" aria-hidden="true"><defs><radialGradient id="tg" cx=".35" cy=".35" r=".75"><stop offset="0" stop-color="#9af5ea"/><stop offset=".6" stop-color="#2fa898"/><stop offset="1" stop-color="#145248"/></radialGradient></defs>
+ <circle cx="22" cy="28" r="18" fill="url(#tg)" stroke="#3FB8A8" stroke-width="2"/>
+ <path d="M8 24 Q12 18 18 21 Q16 27 10 28Z M28 34 Q34 30 37 36 Q32 42 27 39Z" fill="#5fb06a" opacity=".85"/>
+ <path d="M5 16 Q22 -2 39 16 L41 19 L3 19Z" fill="#F6B44C" stroke="#9a6512" stroke-width="1.5"/><rect x="19" y="5" width="6" height="5" rx="1" fill="#FFD37E"/>
+ <ellipse class="eye" cx="16" cy="26" rx="2.4" ry="3" fill="#0A0B1C"/><ellipse class="eye" cx="28" cy="26" rx="2.4" ry="3" fill="#0A0B1C"/>
+ <circle cx="12" cy="31" r="2.2" fill="#ff9a8a" opacity=".6"/><circle cx="32" cy="31" r="2.2" fill="#ff9a8a" opacity=".6"/>
+ <path class="tmouth" d="M14 30 Q22 38 30 30" stroke="#0A0B1C" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+const T_MOUTH={happy:"M14 30 Q22 38 30 30",cheer:"M13 28 Q22 42 31 28 Z",worried:"M15 34 Q22 28 29 34",wow:"M22 33 m-4 0 a4 5 0 1 0 8 0 a4 5 0 1 0 -8 0"};
+/* mount a Terra (character + speech bubble) into a container; returns say(text,mood) */
+function mountTerra(el,extra){const base=el.className.replace(/\bterra2\b/,"").trim();el.className=base+" terra2";el.innerHTML=TERRA_SVG+`<div class="tb2">${extra||""}</div>`;
+ return function say(text,mood="happy",talk=true){el.className=base+" terra2 "+mood;const m=el.querySelector(".tmouth");m.setAttribute("d",T_MOUTH[mood]||T_MOUTH.happy);m.setAttribute("fill",mood==="cheer"||mood==="wow"?"#2a0a00":"none");
+  const b=el.querySelector(".tb2");b.innerHTML=text;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop");if(talk)speak(text)}}
+
+/* screen-space particles (for bursts on buttons, cards, locks) */
+const FXC=document.createElement("canvas");FXC.id="fxc";const FX=FXC.getContext("2d");let FXP=[],fxOn=false;
+function fxSize(){FXC.width=innerWidth;FXC.height=innerHeight}addEventListener("resize",fxSize);
+function fxEmit(o){if(!FXC.isConnected){document.body.appendChild(FXC);fxSize()}FXP.push(Object.assign({vx:0,vy:0,life:50,size:4,color:"#FFD37E",g:.15,drag:.98,glow:false,shape:"c",grow:0},o,{max:o.life||50}));if(!fxOn){fxOn=true;requestAnimationFrame(fxLoop)}}
+function fxBurst(x,y,n,o={}){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(o.speed||6)*(.35+Math.random());fxEmit(Object.assign({},o,{x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-(o.up||2),life:(o.life||45)*(.6+Math.random()*.6),color:Array.isArray(o.colors)?o.colors[i%o.colors.length]:(o.color||"#FFD37E")}))}}
+function fxAt(el,n,o){const r=el.getBoundingClientRect();fxBurst(r.left+r.width/2,r.top+r.height/2,n,o)}
+function fxLoop(){FX.clearRect(0,0,FXC.width,FXC.height);for(let i=FXP.length-1;i>=0;i--){const p=FXP[i];p.vx*=p.drag;p.vy=p.vy*p.drag+p.g;p.x+=p.vx;p.y+=p.vy;p.size+=p.grow;p.life--;if(p.life<=0){FXP.splice(i,1);continue}
+ FX.globalAlpha=Math.min(1,p.life/p.max*1.5);if(p.glow)FX.globalCompositeOperation="lighter";FX.fillStyle=p.color;
+ if(p.shape==="sq"){FX.save();FX.translate(p.x,p.y);FX.rotate(p.life*.25);FX.fillRect(-p.size/2,-p.size/2,p.size,p.size*.6);FX.restore()}else if(p.shape==="star"){FX.save();FX.translate(p.x,p.y);FX.rotate(p.life*.1);FX.beginPath();for(let k=0;k<10;k++){const r=k%2?p.size*.45:p.size;FX.lineTo(Math.cos(k*Math.PI/5)*r,Math.sin(k*Math.PI/5)*r)}FX.fill();FX.restore()}
+ else{FX.beginPath();FX.arc(p.x,p.y,Math.max(.5,p.size),0,7);FX.fill()}FX.globalCompositeOperation="source-over";FX.globalAlpha=1}
+ if(FXP.length)requestAnimationFrame(fxLoop);else{fxOn=false;FX.clearRect(0,0,FXC.width,FXC.height)}}
+const CELEB=["#FFD37E","#F6B44C","#63E0D4","#8FE07A","#A98BF0","#FF7A3D"];
+function celebrate(el){fxAt(el,46,{colors:CELEB,speed:9,up:4,life:60,size:5,shape:"star",g:.25})}
+function sparkle(el){fxAt(el,18,{colors:["#fff","#FFD37E","#63E0D4"],speed:4,life:30,size:3,glow:true,g:0})}
+
+/* drag-and-drop with a tap-tap fallback. items: [data-drag], zones: [data-drop]. onDrop(item, zone) returns true if accepted */
+function makeDnD(root,onDrop){let cur=null,ghost=null,sx=0,sy=0,moved=false,sel=null,py=0,scr=null;
+ const edge=()=>{if(!cur){scr=null;return}const m=70;if(py<m)scrollBy(0,-14);else if(py>innerHeight-m)scrollBy(0,14);scr=requestAnimationFrame(edge)};
+ const zones=()=>[...root.querySelectorAll("[data-drop]")];
+ const zoneAt=(x,y)=>zones().find(z=>{const r=z.getBoundingClientRect();return x>=r.left-8&&x<=r.right+8&&y>=r.top-8&&y<=r.bottom+8});
+ root.addEventListener("pointerdown",e=>{const it=e.target.closest("[data-drag]");if(!it||it.classList.contains("placed")||it.disabled)return;
+  if(sel&&sel!==it)sel.classList.remove("picked");
+  cur=it;sx=e.clientX;sy=e.clientY;moved=false;e.preventDefault();
+  ghost=it.cloneNode(true);ghost.classList.add("dnd-ghost");const r=it.getBoundingClientRect();ghost.style.width=r.width+"px";ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";ghost.style.opacity=0;document.body.appendChild(ghost);py=e.clientY;if(!scr)scr=requestAnimationFrame(edge)});
+ addEventListener("pointermove",e=>{if(!cur)return;py=e.clientY;if(Math.hypot(e.clientX-sx,e.clientY-sy)>10){moved=true;ghost.style.opacity=1;cur.classList.add("lifting");zones().forEach(z=>z.classList.add("dropready"))}
+  ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";const z=zoneAt(e.clientX,e.clientY);zones().forEach(q=>q.classList.toggle("dropover",q===z))});
+ addEventListener("pointerup",e=>{if(!cur)return;const it=cur;cur=null;ghost.remove();it.classList.remove("lifting");zones().forEach(z=>z.classList.remove("dropready","dropover"));
+  if(moved){const z=zoneAt(e.clientX,e.clientY);if(z)onDrop(it,z);sel=null;return}
+  /* tap: select, then tap a zone */
+  if(sel===it){it.classList.remove("picked");sel=null;return}sel=it;it.classList.add("picked");sfx.click();zones().forEach(z=>z.classList.add("dropready"))});
+ root.addEventListener("click",e=>{const z=e.target.closest("[data-drop]");if(z&&sel){const it=sel;sel=null;it.classList.remove("picked");zones().forEach(q=>q.classList.remove("dropready"));onDrop(it,z)}
+  /* keyboard: Enter on an item picks it; Enter on a zone drops */
+  const it=e.target.closest("[data-drag]");if(it&&e.detail===0){if(sel)sel.classList.remove("picked");sel=it;it.classList.add("picked");zones().forEach(q=>q.classList.add("dropready"))}})}
+
+/* ===== SIMULATORS 2: Quake Locator, Volcano Builder, Stripe Recorder (illustrated, hands-on) ===== */
+const CARDS={
+ sim_hunter:{n:"Quake Hunter",i:"📍",r:"rare",f:"Three stations and three circles find any epicenter.",how:"Find an epicenter"},
+ sim_triple:{n:"Seismic Pro",i:"🎯",r:"epic",f:"You located 3 earthquakes like a real seismologist!",how:"Find all 3 epicenters"},
+ sim_arch:{n:"Volcano Architect",i:"🌋",r:"rare",f:"Runny or sticky lava, more or less gas: that decides the volcano.",how:"Build all 3 volcano types"},
+ sim_dome:{n:"Dome Builder",i:"⛰️",r:"epic",f:"Very sticky lava with little gas piles up into a lava dome.",how:"Discover the secret volcano"},
+ sim_stripe:{n:"Magnetic Recorder",i:"🧲",r:"rare",f:"Each flip of Earth’s field leaves a stripe on both sides of the ridge.",how:"Record 4 flips"},
+ sim_ship:{n:"Ship Scientist",i:"🚢",r:"rare",f:"Ships towing magnetometers discovered the seafloor stripes in the 1950s.",how:"Read the stripes with the ship"},
+ sim_speed:{n:"Speed Reader",i:"📏",r:"common",f:"Wide stripes mean fast spreading.",how:"Finish the stripe questions"}};
+const say=mountTerra($("#sterra"));
+const W=1200,H=560;
+const TBW=document.querySelector(".tbwrap"),TBHOME=TBW.parentNode,TBNEXT=TBW.nextSibling;
+function placeTerra(t){t=t||TAB;if(APPMQ.matches){const r=document.querySelector("#s_"+t+" .simR");if(TBW.parentNode!==r)r.insertBefore(TBW,r.firstChild)}else if(TBW.parentNode!==TBHOME)TBHOME.insertBefore(TBW,TBNEXT)}
+APPMQ.addEventListener&&APPMQ.addEventListener("change",()=>placeTerra());
+let TAB="quake";
+function tab(t){TAB=t;placeTerra(t);document.querySelectorAll(".simtab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));document.querySelectorAll(".sim").forEach(s=>s.style.display=s.id==="s_"+t?"":"none");hush();
+ ({quake:()=>say("📍 <b>Quake Locator!</b> An earthquake just hit. Read each station’s seismograph, find the distance, and draw circles to find where it started.","happy"),
+   volcano:()=>say("🌋 <b>Volcano Builder!</b> Slide the controls to change the magma, then press ERUPT and watch what you build.","happy"),
+   stripe:()=>say("🧲 <b>Stripe Recorder!</b> Spread the seafloor, flip Earth’s magnetic field, then drag the ship to read the stripes.","happy")})[t]()}
+document.querySelectorAll(".simtab").forEach(b=>b.onclick=()=>tab(b.dataset.t));
+function mission(id){const el=$("#"+id);if(el&&!el.classList.contains("got")){el.classList.add("got");el.querySelector("i").textContent="✅";celebrate(el);sfx.win();addXP(15)}}
+function mcq(box,q,choices,a,why,onRight){const el=$(box);el.innerHTML=`<p class="q">${q}</p><div class="choices">${choices.map((c,i)=>`<button class="choice" data-i="${i}"><span class="L">${LET[i]}</span><span>${c}</span></button>`).join("")}</div><div class="feedback"></div>`;
+ if(S.read)speak(q+". "+choices.map((c,i)=>"Choice "+LET[i]+". "+c).join(". "));
+ el.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;const fb=el.querySelector(".feedback");hush();
+  if(i===a){b.classList.add("right");el.querySelectorAll(".choice").forEach(x=>x.disabled=true);sfx.good();sparkle(b);fb.className="feedback show good";fb.innerHTML="✅ "+why;say("Correct! "+why,"cheer");addXP(5);setTimeout(onRight,900)}
+  else{b.classList.add("wrong");sfx.bad();fb.className="feedback show bad";fb.innerHTML="Not quite. Try another answer! 💪";say("Not quite. Try another answer. You’ve got this!","worried")}})}
+const shade=(c,a)=>c;
+
+/* ===================== QUAKE LOCATOR ===================== */
+const qc=$("#qc"),qx=qc.getContext("2d");const KM=6;
+const ST=[["A",190,140],["B",1010,170],["C",600,500]];
+const EPIS=[[470,300],[760,340],[330,410]];
+const TOWNS=[[300,230],[850,260],[680,420],[420,470],[980,420],[140,330]];
+const QL={e:0,step:0,lags:[],rings:[],ringR:[],found:0,pick:null,done:false,ripple:0};
+const mapTex=(()=>{const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,"#2f6a3a");g.addColorStop(1,"#3f7a3a");x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.fillStyle="#1d5f94";x.beginPath();x.moveTo(0,0);x.bezierCurveTo(140,30,90,120,0,160);x.fill();x.beginPath();x.moveTo(W,H);x.bezierCurveTo(1120,440,1180,380,W,330);x.fill();
+ for(let i=0;i<40;i++){const cx=Math.random()*W,cy=Math.random()*H,r=30+Math.random()*80;const hg=x.createRadialGradient(cx-r*.3,cy-r*.3,4,cx,cy,r);hg.addColorStop(0,"rgba(140,170,90,.5)");hg.addColorStop(1,"rgba(40,80,40,0)");x.fillStyle=hg;x.beginPath();x.arc(cx,cy,r,0,7);x.fill()}
+ x.strokeStyle="rgba(90,170,230,.8)";x.lineWidth=5;x.beginPath();x.moveTo(60,140);x.bezierCurveTo(260,200,400,120,560,250);x.bezierCurveTo(700,360,900,300,1150,360);x.stroke();
+ x.strokeStyle="rgba(201,178,122,.7)";x.lineWidth=4;x.setLineDash([12,8]);x.beginPath();x.moveTo(100,500);x.bezierCurveTo(400,380,700,520,1100,250);x.stroke();x.setLineDash([]);
+ for(let i=0;i<30;i++){const tx=Math.random()*W,ty=Math.random()*H;x.fillStyle="#1f5a2a";x.beginPath();x.arc(tx,ty,8,0,7);x.arc(tx+7,ty+4,6,0,7);x.fill()}
+ x.strokeStyle="rgba(255,255,255,.07)";x.lineWidth=1;for(let i=0;i<W;i+=48){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke()}for(let j=0;j<H;j+=48){x.beginPath();x.moveTo(0,j);x.lineTo(W,j);x.stroke()}return c})();
+function qlStart(){const [ex,ey]=EPIS[QL.e%3];QL.lags=ST.map(([,x,y])=>Math.max(2,Math.round(Math.hypot(x-ex,y-ey)/KM/8)));QL.rings=[];QL.ringR=[];QL.step=0;QL.pick=null;QL.done=false;
+ $("#qlNum").textContent=QL.e%3+1;$("#qlFound").textContent=QL.found;qlStep()}
+function seisSVG(lag,id){const Wd=560,ox=18,step=(Wd-36)/16;let d=`M${ox} 45`;for(let t=0;t<=16;t+=.04){const x=ox+t*step;let y=45;if(t>=1&&t<1+lag)y+=Math.sin(t*28)*6;else if(t>=1+lag)y+=Math.sin(t*22)*30;d+=` L${x.toFixed(1)} ${y.toFixed(1)}`}
+ let g="";for(let i=0;i<=16;i++){const x=ox+i*step;g+=`<line x1="${x}" y1="4" x2="${x}" y2="86" stroke="#1f3a4a"/><text x="${x}" y="98" font-size="11" fill="#8fb7c9" text-anchor="middle" font-family="sans-serif">${i}</text>`}
+ return `<svg viewBox="0 0 ${Wd} 102" id="${id}" role="img" aria-label="Seismograph">${g}<path d="${d}" fill="none" stroke="#FFD37E" stroke-width="2.4"/><g class="mk"></g></svg>`}
+function qlStep(){const i=QL.step;const box=$("#qlBox");
+ if(i<3){const [s]=ST[i],l=QL.lags[i];
+  box.innerHTML=`<div class="tag">📈 Station ${s} · step ${i+1} of 3</div><div class="screen" style="margin-top:8px"><div class="sl">STATION ${s}<span class="gap" id="qgap">Tap where the small wiggles start, then where the big wiggles start</span></div>${seisSVG(l,"qsv")}</div><div id="qlQ"></div>`;
+  say(`Station ${s}: <b>tap</b> the start of the small wiggles (P wave), then the start of the big wiggles (S wave).`,"happy");
+  const sv=$("#qsv");let marks=[];sv.addEventListener("pointerdown",e=>{const r=sv.getBoundingClientRect();const x=(e.clientX-r.left)*560/r.width;const sec=Math.max(0,Math.min(16,Math.round((x-18)/((560-36)/16))));
+   if(marks.length>=2)marks=[];marks.push(sec);sfx.click();sv.querySelector(".mk").innerHTML=marks.map((m,k)=>{const xx=18+m*((560-36)/16);return `<line x1="${xx}" y1="2" x2="${xx}" y2="88" stroke="${k?"#FFD37E":"#63E0D4"}" stroke-width="4"/><rect x="${xx-20}" y="0" width="40" height="16" rx="5" fill="${k?"#FFD37E":"#63E0D4"}"/><text x="${xx}" y="12" font-size="11" font-weight="700" text-anchor="middle" fill="#0A0B1C" font-family="sans-serif">${k?"S":"P"} ${m}s</text>`}).join("");
+   if(marks.length===2){const gap=Math.abs(marks[1]-marks[0]);if(gap===l){$("#qgap").innerHTML=`gap = <b>${gap} seconds</b> ✅`;sparkle($("#qgap"));sfx.good();
+     const opts=shuffle([l*8,l+8,l]);mcq("#qlQ",`The gap is ${l} seconds. Each second = 8 km. How far away was the quake from Station ${s}?`,opts.map(v=>v+" km"),opts.indexOf(l*8),`${l} × 8 = ${l*8} km. Watch the ring grow on the map!`,()=>{QL.rings.push(l*8);QL.ringR.push(0);QL.step++;sfx.splash();qlStep()})}
+    else{$("#qgap").innerHTML=`gap = <b>${gap} s</b>. Hmm, check where each set of wiggles <i>starts</i>.`;sfx.bad()}}else $("#qgap").textContent="Now tap where the BIG wiggles start"})}
+ else{box.innerHTML=`<div class="tag cy">🎯 Final step</div><p class="q" style="margin-top:8px">Tap the map where <b style="color:var(--gold-bright)">all 3 rings cross</b>. That’s the epicenter!</p>`;say("All 3 rings are on the map! 🎯 <b>Tap</b> the spot where all three rings cross.","wow");(APPMQ.matches||qc.scrollIntoView({behavior:"smooth",block:"center"}))}}
+function qlDraw(){const x=qx,t=performance.now();x.drawImage(mapTex,0,0);
+ TOWNS.forEach(([a,b],i)=>{const sh=QL.ripple>0?Math.sin(t/30+i)*QL.ripple*2:0;[[0,0],[14,4],[-10,6]].forEach(([dx,dy],k)=>{x.fillStyle=["#e8c37a","#d98f6a","#9fc1e0"][k];x.fillRect(a+dx+sh-6,b+dy-8,12,10);x.fillStyle="#7a3b2a";x.beginPath();x.moveTo(a+dx+sh-8,b+dy-8);x.lineTo(a+dx+sh,b+dy-15);x.lineTo(a+dx+sh+8,b+dy-8);x.fill()})});
+ QL.rings.forEach((km,i)=>{QL.ringR[i]=Math.min(km*KM,QL.ringR[i]+6);const [,sx,sy]=ST[i];const col=["#FFD37E","#63E0D4","#A98BF0"][i];x.save();x.globalCompositeOperation="lighter";x.strokeStyle=col+"55";x.lineWidth=14;x.beginPath();x.arc(sx,sy,QL.ringR[i],0,7);x.stroke();x.restore();
+  x.strokeStyle=col;x.lineWidth=4;x.setLineDash([12,7]);x.lineDashOffset=-t/40;x.beginPath();x.arc(sx,sy,QL.ringR[i],0,7);x.stroke();x.setLineDash([]);
+  x.fillStyle=col;x.font="bold 18px sans-serif";x.textAlign="center";x.fillText(km+" km",sx,sy-QL.ringR[i]-8)});
+ ST.forEach(([s,sx,sy],i)=>{x.fillStyle="#d9d4e8";x.fillRect(sx-16,sy-10,32,22);x.fillStyle="#7a7ea8";x.beginPath();x.moveTo(sx-20,sy-10);x.lineTo(sx,sy-24);x.lineTo(sx+20,sy-10);x.fill();
+  x.strokeStyle="#c9cce8";x.lineWidth=2;x.beginPath();x.moveTo(sx+10,sy-20);x.lineTo(sx+10,sy-44);x.stroke();x.fillStyle=Math.sin(t/200+i)>0?"#F0674F":"#6a1a12";x.beginPath();x.arc(sx+10,sy-46,4,0,7);x.fill();
+  if(i===QL.step&&QL.step<3){x.strokeStyle=`rgba(255,211,126,${.5+.5*Math.sin(t/200)})`;x.lineWidth=3;x.beginPath();x.arc(sx,sy,34,0,7);x.stroke()}
+  x.fillStyle="#0A0B1C";x.beginPath();x.arc(sx,sy+26,13,0,7);x.fill();x.fillStyle="#fff";x.font="bold 16px sans-serif";x.textAlign="center";x.fillText(s,sx,sy+32)});
+ if(QL.pick&&!QL.done){x.fillStyle="#fff";x.beginPath();x.arc(QL.pick[0],QL.pick[1],7,0,7);x.fill()}
+ if(QL.done){const [ex,ey]=EPIS[QL.e%3];QL.ripple*=.98;for(let k=0;k<4;k++){const r=((t/8+k*40)%160);x.strokeStyle=`rgba(255,90,60,${1-r/160})`;x.lineWidth=4;x.beginPath();x.arc(ex,ey,r,0,7);x.stroke()}x.font="46px sans-serif";x.textAlign="center";x.fillText("⭐",ex,ey+16)}
+ x.fillStyle="rgba(10,11,28,.7)";x.fillRect(10,H-34,200,26);x.fillStyle="#fff";x.font="14px sans-serif";x.textAlign="left";x.fillText("1 square = 8 km",20,H-16);
+ requestAnimationFrame(qlDraw)}
+qc.addEventListener("pointerdown",e=>{if(QL.step<3||QL.done)return;const r=qc.getBoundingClientRect();const px=(e.clientX-r.left)*W/r.width,py=(e.clientY-r.top)*H/r.height;QL.pick=[px,py];const [ex,ey]=EPIS[QL.e%3];
+ if(Math.hypot(px-ex,py-ey)<45){QL.done=true;QL.ripple=6;QL.found++;$("#qlFound").textContent=QL.found;sfx.rumble();setTimeout(sfx.win,300);quake();fxBurst(e.clientX,e.clientY,50,{colors:CELEB,speed:8,life:55,size:5,shape:"star",g:.2});
+  say("🎯 EPICENTER FOUND! Real seismologists use this same three-station trick.","cheer");unlockCard("sim_hunter");mission("mq1");if(QL.found>=3){mission("mq3");unlockCard("sim_triple")}
+  $("#qlBox").innerHTML=`<div class="feedback show good">🎯 You found it! The quake started right under the ⭐.</div><div style="margin-top:10px"><button class="btn big pulse" id="qlNext">📍 Next earthquake</button></div>`;$("#qlNext").onclick=()=>{QL.e++;qlStart()}}
+ else{sfx.bad();toast("Not there. Find where all 3 rings cross!","bad")}});
+
+/* ===================== VOLCANO BUILDER ===================== */
+const vc=$("#vc"),vx=vc.getContext("2d");
+const VB={shake:0,lava:20,gas:20,many:5,busy:false,type:null,h:0,layers:[],t0:0,dur:0,pts:[]};
+const VT={shield:{t:"Shield volcano! 🛡️",x:"Runny lava flows far before it cools, so it builds a wide, gentle shape.",e:"Real example: Mauna Loa, Hawaii",m:"mv1"},
+ strato:{t:"Stratovolcano! 💥",x:"Sticky lava traps gas until it explodes. Layers of ash and lava stack into a tall, steep cone.",e:"Real example: Mount St. Helens",m:"mv2"},
+ cinder:{t:"Cinder cone! 🌋",x:"Gas blasts blobs of lava into the air. They cool and pile up into a small, steep hill.",e:"Real example: Parícutin, Mexico",m:"mv3"},
+ dome:{t:"SECRET: Lava dome! ⛰️",x:"Very sticky lava with little gas oozes out like toothpaste and piles up in a lump.",e:"Real example: the dome inside Mount St. Helens",m:"mv4"},
+ flow:{t:"Just a lava flow 🔥",x:"A quiet eruption of runny lava spreads out flat. Try MORE eruptions to build a real volcano!",e:"",m:null}};
+function vbType(){const sticky=VB.lava>=50,gassy=VB.gas>=50,many=VB.many>=3;if(gassy&&!many)return"cinder";if(!sticky)return many?"shield":"flow";if(gassy)return"strato";return"dome"}
+const PROF={shield:[340,110],strato:[190,250],cinder:[100,130],dome:[90,80],flow:[330,18]};
+function vbDraw(){const x=vx,t=performance.now();x.save();if(VB.shake>0){x.translate((Math.random()-.5)*VB.shake,(Math.random()-.5)*VB.shake);VB.shake*=.93;if(VB.shake<.3)VB.shake=0}const sky=x.createLinearGradient(0,0,0,300);sky.addColorStop(0,"#0b1030");sky.addColorStop(1,"#3a2f66");x.fillStyle=sky;x.fillRect(0,0,W,H);
+ for(let i=0;i<50;i++){x.fillStyle=`rgba(255,255,255,${.3+.3*Math.sin(t/700+i)})`;x.fillRect((i*197)%W,(i*53)%220,2,2)}
+ const GY=330;/* cutaway ground */const g=x.createLinearGradient(0,GY,0,H);g.addColorStop(0,"#6b4a36");g.addColorStop(1,"#2a1a12");x.fillStyle=g;x.fillRect(0,GY,W,H-GY);
+ x.strokeStyle="rgba(0,0,0,.25)";x.lineWidth=2;for(let k=0;k<6;k++){x.beginPath();x.moveTo(0,GY+30+k*34);for(let i=0;i<=W;i+=60)x.lineTo(i,GY+30+k*34+Math.sin(i/90+k)*6);x.stroke()}
+ x.fillStyle="#2f6a3a";x.fillRect(0,GY-6,W,8);
+ /* magma chamber reflects the sliders */
+ const cx=600,cy=490;const sticky=VB.lava/100,gas=VB.gas/100;const mc=x.createRadialGradient(cx,cy,10,cx,cy,150);mc.addColorStop(0,sticky>.5?"#ffb060":"#ffe08a");mc.addColorStop(.6,sticky>.5?"#c8401a":"#ff7a3d");mc.addColorStop(1,"rgba(120,20,10,0)");
+ x.fillStyle=mc;x.beginPath();x.ellipse(cx,cy,180,60,0,0,7);x.fill();
+ for(let i=0;i<Math.round(4+gas*26);i++){const a=i*2.4+t/(600-gas*400),r=(i*37)%150;x.fillStyle="rgba(255,255,230,.7)";x.beginPath();x.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r*.3,2+gas*3,0,7);x.fill()}
+ x.fillStyle=sticky>.5?"#c8401a":"#ff7a3d";x.fillRect(cx-7,GY,14,cy-GY-40);
+ x.fillStyle="rgba(255,255,255,.85)";x.font="bold 15px sans-serif";x.textAlign="left";x.fillText("MAGMA CHAMBER",cx+190,cy-20);x.fillText(`${sticky>.5?"sticky":"runny"} · ${gas>.5?"lots of gas":"little gas"}`,cx+190,cy);
+ /* the volcano being built */
+ if(VB.type){const [hw,hh]=PROF[VB.type];const p=VB.h;const n=VB.layers.length;
+  for(let L=n;L>=1;L--){const f=Math.min(1,p*n/L)*L/n;if(f<=0)continue;const w=hw*f,h=hh*f;x.fillStyle=VB.layers[L-1];x.beginPath();
+   if(["shield","flow","dome"].includes(VB.type)){x.moveTo(cx-w,GY);x.quadraticCurveTo(cx,GY-h*2,cx+w,GY)}else{x.moveTo(cx-w,GY);x.lineTo(cx-w*.13,GY-h);x.lineTo(cx+w*.13,GY-h);x.lineTo(cx+w,GY)}x.fill()}
+  const top=GY-hh*Math.min(1,p);
+  const gasF=VB.gas/100;
+  if(VB.busy){const k=(t-VB.t0)/VB.dur;
+   /* crater glow + flash */
+   const cg=x.createRadialGradient(cx,top,4,cx,top,90+60*gasF);cg.addColorStop(0,"rgba(255,240,170,.95)");cg.addColorStop(.35,"rgba(255,122,61,.6)");cg.addColorStop(1,"rgba(255,60,20,0)");x.save();x.globalCompositeOperation="lighter";x.fillStyle=cg;x.beginPath();x.arc(cx,top,150,0,7);x.fill();x.restore();
+   if(k<.08){x.fillStyle=`rgba(255,220,160,${.5*(1-k/.08)})`;x.fillRect(-20,-20,W+40,H+40)}
+   /* lava fountain: taller with more gas */
+   const nF=VB.type==="dome"?1:2+Math.round(gasF*6);
+   for(let i=0;i<nF;i++){const sp=4+gasF*7;VB.pts.push({x:cx+(Math.random()-.5)*16,y:top,vx:(Math.random()-.5)*(2+gasF*8),vy:-sp-Math.random()*sp*.6,l:70,s:4+Math.random()*5,c:["#fff1b0","#ffd37e","#ff9a3d","#ff5a2a"][i%4],glow:1})}
+   /* ash cloud for gassy eruptions */
+   if(gasF>=.5&&Math.random()<.7)VB.pts.push({x:cx+(Math.random()-.5)*30,y:top-10,vx:(Math.random()-.5)*1.4,vy:-1.5-Math.random()*2*gasF,l:160,s:16+Math.random()*14,grow:.35,c:"rgba(120,112,135,.5)",smoke:1});
+   if(VB.type==="strato"&&Math.random()<.35)VB.pts.push({x:cx,y:top,vx:(Math.random()-.5)*14,vy:-8-Math.random()*8,l:80,s:6,c:"#3a1a10",rock:1});
+   /* glowing lava rivers down the sides for runny lava */
+   if(VB.type==="shield"||VB.type==="flow"||VB.type==="dome"){const reach=Math.min(1,k*1.4);x.save();x.globalCompositeOperation="lighter";x.lineCap="round";
+    [-1,1].forEach(s=>{for(const [lw,col] of [[18,"rgba(255,90,30,.35)"],[8,"#ff7a3d"],[3,"#ffe08a"]]){x.strokeStyle=col;x.lineWidth=lw;x.beginPath();x.moveTo(cx,top);x.quadraticCurveTo(cx+s*hw*.45*reach,top+(GY-top)*.25,cx+s*hw*(VB.type==="dome"?.5:1.05)*reach,GY-4);x.stroke()}});x.restore()}}
+  else if(VB.type!=="flow"){/* after: a lazy steam plume so the vent stays alive */if(Math.random()<.15)VB.pts.push({x:cx+(Math.random()-.5)*10,y:top,vx:(Math.random()-.5)*.6,vy:-.8-Math.random(),l:120,s:6,grow:.25,c:"rgba(200,200,215,.25)",smoke:1})}}
+ for(let i=VB.pts.length-1;i>=0;i--){const q=VB.pts[i];q.x+=q.vx;q.y+=q.vy;q.l--;if(q.smoke){q.s+=q.grow||0;q.vx*=.99}else q.vy+=.25;
+  if(q.l<=0||(!q.smoke&&q.y>GY)){if(!q.smoke&&q.glow&&q.y>GY&&VB.pts.length<900)VB.pts.push({x:q.x,y:GY-2,vx:0,vy:-.5,l:14,s:3,c:"rgba(255,160,60,.6)",glow:1,smoke:1});VB.pts.splice(i,1);continue}
+  x.save();if(q.glow||(!q.smoke&&!q.rock))x.globalCompositeOperation="lighter";x.globalAlpha=q.smoke?Math.min(1,q.l/60):1;x.fillStyle=q.c;x.beginPath();x.arc(q.x,q.y,q.s||4,0,7);x.fill();x.restore()}
+ x.restore();
+ requestAnimationFrame(vbDraw)}
+const LAYC={shield:["#5a3a2a","#4a3022"],strato:["#5a3a2a","#8a8a96"],cinder:["#3a2a2a","#4a2a22"],dome:["#5a4a42","#6a5a52"],flow:["#4a3022","#4a3022"]};
+function vbErupt(){if(VB.busy)return;if(!APPMQ.matches)vc.scrollIntoView({behavior:"smooth",block:"center"});const type=vbType();VB.type=type;VB.layers=Array.from({length:Math.max(2,Math.min(6,VB.many))},(_,i)=>LAYC[type][i%2]);VB.h=0;VB.busy=true;VB.t0=performance.now();VB.dur=2600+VB.many*300;VB.shake=6+VB.gas/10;
+ $("#vbRes").classList.remove("show");sfx.rumble();if(VB.gas>=50){quake();setTimeout(()=>sfx.hit(),300);setTimeout(()=>sfx.hit(),900)}else setTimeout(()=>sfx.splash(),300);VB.boom=setInterval(()=>{if(!VB.busy){clearInterval(VB.boom);return}VB.shake=Math.max(VB.shake,2+VB.gas/25);if(VB.gas>=50&&Math.random()<.5)sfx.hit()},600);say(type==="strato"?"💥 KABOOM! Sticky magma traps gas until it explodes!":type==="cinder"?"🌋 Look at the lava blobs flying!":"🔥 Here it comes…","wow");
+ const st=n=>{VB.h=Math.min(1,(n-VB.t0)/VB.dur);if(VB.h<1)requestAnimationFrame(st);else done()};requestAnimationFrame(st);
+ function done(){VB.busy=false;const r=VT[type];$("#vbRes").innerHTML=`<h3>${r.t}</h3><p>${r.x}</p>${r.e?`<p class="sub">${r.e}</p>`:""}`;$("#vbRes").classList.add("show");say("<b>"+r.t+"</b> "+r.x+(r.e?" <i>"+r.e+".</i>":""),r.m?"cheer":"happy");
+  if(r.m){mission(r.m);if(["mv1","mv2","mv3"].every(m=>$("#"+m).classList.contains("got")))unlockCard("sim_arch");if(type==="dome")unlockCard("sim_dome")}}}
+[["vbL","lava",v=>v<50?`💧 Runny (${v})`:`🍯 Sticky (${v})`],["vbG","gas",v=>v<50?`🫧 Little gas (${v})`:`💨 Lots of gas (${v})`],["vbM","many",v=>`${v} eruption${v>1?"s":""}`]].forEach(([id,k,lab])=>{const s=$("#"+id);const out=$("#"+id+"o");
+ const upd=()=>{VB[k]=+s.value;out.textContent=lab(+s.value)};s.addEventListener("input",()=>{upd();sfx.click()});upd()});
+$("#vbBtn").onclick=vbErupt;
+
+/* ===================== STRIPE RECORDER ===================== */
+const sc=$("#sc"),sx=sc.getContext("2d");
+const SR={cols:[],field:0,run:false,speed:1,flips:0,usedFast:false,usedSlow:false,q1:false,q2:false,ship:300,hist:[],shipRead:new Set(),drag:false};
+const RX=600,FLOORB=330,FLOORF=520;
+function persp(xw,y){const s=lerp2(.55,1,(y-FLOORB)/(FLOORF-FLOORB));return RX+(xw-RX)*s}
+function lerp2(a,b,t){return a+(b-a)*t}
+function srDraw(){const x=sx,t=performance.now();
+ const sky=x.createLinearGradient(0,0,0,110);sky.addColorStop(0,"#7ec8f0");sky.addColorStop(1,"#cfe9f5");x.fillStyle=sky;x.fillRect(0,0,W,110);
+ const sea=x.createLinearGradient(0,110,0,FLOORB+40);sea.addColorStop(0,"#2a7fc0");sea.addColorStop(1,"#0b2a4a");x.fillStyle=sea;x.fillRect(0,100,W,H);
+ x.fillStyle="#2a7fc0";x.beginPath();x.moveTo(0,110);for(let i=0;i<=W;i+=20)x.lineTo(i,106+3*Math.sin(i/40+t/500));x.lineTo(W,120);x.lineTo(0,120);x.fill();
+ for(let i=0;i<12;i++){x.fillStyle="rgba(255,255,255,.08)";x.fillRect((i*111+t/30)%W,140+i*14,60,2)}
+ /* seafloor: bands of the same polarity drawn in perspective */
+ const half=Math.min(380,SR.cols.length);const bands=[];let start=0;for(let i=1;i<=half;i++){if(i===half||SR.cols[i]!==SR.cols[start]){bands.push([start,i,SR.cols[start]]);start=i}}
+ x.fillStyle="#3a3d5a";x.beginPath();x.moveTo(persp(40,FLOORB),FLOORB);x.lineTo(persp(1160,FLOORB),FLOORB);x.lineTo(1160,FLOORF);x.lineTo(40,FLOORF);x.fill();
+ bands.forEach(([a,b,v])=>{x.fillStyle=v?"#4a4f9a":"#c98a2a";[[RX+8+a*1.4,RX+8+b*1.4],[RX-8-b*1.4,RX-8-a*1.4]].forEach(([l,r])=>{x.beginPath();x.moveTo(persp(l,FLOORB),FLOORB);x.lineTo(persp(r,FLOORB),FLOORB);x.lineTo(r,FLOORF);x.lineTo(l,FLOORF);x.fill()})});
+ x.fillStyle="#2a1a12";x.fillRect(40,FLOORF,1120,30);bands.forEach(([a,b,v])=>{x.fillStyle=v?"#353a78":"#9a6a1e";x.fillRect(RX+8+a*1.4,FLOORF,(b-a)*1.4,30);x.fillRect(RX-8-b*1.4,FLOORF,(b-a)*1.4,30)});
+ /* ridge */
+ x.save();x.globalCompositeOperation="lighter";const rg=x.createLinearGradient(RX-30,0,RX+30,0);rg.addColorStop(0,"rgba(255,120,40,0)");rg.addColorStop(.5,`rgba(255,140,50,${.6+.2*Math.sin(t/200)})`);rg.addColorStop(1,"rgba(255,120,40,0)");x.fillStyle=rg;x.fillRect(RX-30,FLOORB-10,60,FLOORF-FLOORB+40);x.restore();
+ x.fillStyle="#ff7a3d";x.beginPath();x.moveTo(persp(RX-8,FLOORB),FLOORB);x.lineTo(persp(RX+8,FLOORB),FLOORB);x.lineTo(RX+8,FLOORF+30);x.lineTo(RX-8,FLOORF+30);x.fill();
+ if(SR.run&&Math.random()<.5)for(let k=0;k<2;k++){x.fillStyle="rgba(255,200,120,.8)";x.beginPath();x.arc(RX+(Math.random()-.5)*14,FLOORB+Math.random()*190,2,0,7);x.fill()}
+ if(SR.run){x.strokeStyle="rgba(255,211,126,.7)";x.lineWidth=3;[[-1],[1]].forEach(([s])=>{const y=FLOORF+15,l=RX+s*30;x.beginPath();x.moveTo(l,y);x.lineTo(l+s*60,y);x.stroke();x.beginPath();x.moveTo(l+s*60,y-6);x.lineTo(l+s*70,y);x.lineTo(l+s*60,y+6);x.fill()})}
+ /* the ship and its magnetometer */
+ const shx=SR.ship,bob=Math.sin(t/400)*3;x.fillStyle="#e8e8f0";x.beginPath();x.moveTo(shx-50,96+bob);x.lineTo(shx+50,96+bob);x.lineTo(shx+38,114+bob);x.lineTo(shx-38,114+bob);x.fill();x.fillStyle="#c0392b";x.fillRect(shx-50,108+bob,100,6);
+ x.fillStyle="#f4f2fa";x.fillRect(shx-20,76+bob,34,20);x.fillStyle="#4a7dff";x.fillRect(shx-14,80+bob,8,6);x.fillRect(shx+0,80+bob,8,6);x.fillStyle="#333";x.fillRect(shx+4,62+bob,4,14);
+ x.strokeStyle="rgba(255,255,255,.7)";x.lineWidth=2;x.setLineDash([5,4]);x.beginPath();x.moveTo(shx-40,112+bob);x.quadraticCurveTo(shx-70,200,shx-60,280);x.stroke();x.setLineDash([]);
+ x.fillStyle="#FFD37E";x.beginPath();x.ellipse(shx-60,284,14,7,0,0,7);x.fill();
+ if(!SR.run&&!SR.drag){x.fillStyle="rgba(255,255,255,.9)";x.font="bold 15px sans-serif";x.textAlign="center";x.fillText("⟵ drag the ship ⟶",shx,52)}
+ /* reading under the ship */
+ const dx=(shx-60)-RX;const idx=Math.floor((Math.abs(dx)-8)/1.4);let val=null;if(Math.abs(dx)>8&&idx<SR.cols.length&&idx>=0)val=SR.cols[idx];
+ if(SR.drag||SR.run){SR.hist.push(val);if(SR.hist.length>300)SR.hist.shift()}
+ x.fillStyle="rgba(10,11,28,.82)";x.fillRect(W-330,10,320,90);x.strokeStyle="#3a3c6c";x.strokeRect(W-330,10,320,90);x.fillStyle="#B4B1D3";x.font="12px sans-serif";x.textAlign="left";x.fillText("MAGNETOMETER",W-320,26);
+ x.fillStyle=val===null?"#B4B1D3":val?"#9aa0ff":"#FFD37E";x.font="bold 13px sans-serif";x.fillText(val===null?"over the ridge / no stripe":val?"REVERSED ↓":"NORMAL ↑",W-200,26);
+ x.strokeStyle="#FFD37E";x.lineWidth=2;x.beginPath();SR.hist.forEach((v,i)=>{const y=v===null?62:v?84:38;const xx=W-320+i;i?x.lineTo(xx,y):x.moveTo(xx,y)});x.stroke();
+ if(val!==null&&SR.drag){SR.shipRead.add(idx>>4);if(SR.shipRead.size>=10&&SR.flips>=2){unlockCard("sim_ship");mission("ms4")}}
+ requestAnimationFrame(srDraw)}
+function srTick(){if(SR.run){for(let k=0;k<SR.speed;k++){SR.cols.unshift(SR.field);if(SR.cols.length>420)SR.cols.pop()}if(SR.speed>1)SR.usedFast=true;else SR.usedSlow=true}setTimeout(srTick,30)}
+function srFlip(){SR.field=1-SR.field;SR.flips++;sfx.hit();$("#srLever").classList.toggle("down",!!SR.field);
+ $("#srField").innerHTML=SR.field?"🧭 Earth’s field: <b style='color:#9aa0ff'>REVERSED (points south)</b>":"🧭 Earth’s field: <b style='color:#FFD37E'>NORMAL (points north)</b>";$("#srFlips").textContent=SR.flips;
+ if(SR.flips>=4&&SR.cols.length>40){mission("ms1");unlockCard("sim_stripe");if(!SR.q1){SR.q1=true;say("🧲 Look: the same stripes on BOTH sides! Now try some stripe math.","cheer");srQ1()}}}
+function srQ1(){mcq("#srQ","Stripe math! A stripe edge is 30 km from the ridge. The rock there is 1,500,000 years old. How fast did the seafloor spread? (1 km = 100,000 cm)",["2 cm per year","20 km per year","0.5 cm per year"],0,"30 km = 3,000,000 cm. 3,000,000 ÷ 1,500,000 = 2 cm per year.",()=>{mission("ms2");$("#srQ").insertAdjacentHTML("beforeend",`<p class="q" style="margin-top:12px">Next: try 🐢 <b>Slow</b> and 🐇 <b>Fast</b> spreading. Watch the stripe widths!</p>`);say("Now try slow AND fast spreading. Watch how wide the stripes get!","happy");srWatch()})}
+function srWatch(){const iv=setInterval(()=>{if(SR.usedFast&&SR.usedSlow&&!SR.q2){SR.q2=true;clearInterval(iv);
+ mcq("#srQ","You tried both speeds. When the seafloor spreads FAST, the stripes are…",["wider","narrower","the same"],0,"Fast spreading makes more new rock between each flip, so the stripes get wider!",()=>{mission("ms3");unlockCard("sim_speed")})}},500)}
+$("#srPlay").onclick=()=>{SR.run=!SR.run;$("#srPlay").innerHTML=SR.run?"⏸ Pause":"▶ Spread the seafloor";sfx.click()};
+$("#srLever").onclick=srFlip;
+document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{SR.speed=+b.dataset.sp;document.querySelectorAll("[data-sp]").forEach(x=>x.classList.toggle("on",x===b));sfx.click()});
+$("#srReset").onclick=()=>{SR.cols=[];SR.hist=[]};
+sc.addEventListener("pointerdown",e=>{const r=sc.getBoundingClientRect();const px=(e.clientX-r.left)*W/r.width,py=(e.clientY-r.top)*H/r.height;if(py<160&&Math.abs(px-SR.ship)<90){SR.drag=true;sc.setPointerCapture(e.pointerId)}});
+sc.addEventListener("pointermove",e=>{if(!SR.drag)return;const r=sc.getBoundingClientRect();SR.ship=Math.max(80,Math.min(W-30,(e.clientX-r.left)*W/r.width))});
+sc.addEventListener("pointerup",()=>SR.drag=false);
+
+/* ===================== start ===================== */
+kitHeader("Unit 8 · Tectonic Plates","Plate Simulators");
+qlStart();qlDraw();vbDraw();srDraw();srTick();
+const hash=location.hash.slice(1);tab(["quake","volcano","stripe"].includes(hash)?hash:"quake");
+
+[["qc","fb_qc"],["vc","fb_vc"],["sc","fb_sc"]].forEach(([c,b])=>fitCanvas($("#"+c),$("#"+b)));
+
+
+/* ===== VISUAL POLISH v2 — Nov 2026: tab keys 1-3, all-missions cheer ===== */
+(function(){
+ addEventListener("keydown",function(e){if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.target&&(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"))return;
+  const t=["quake","volcano","stripe"]["123".indexOf(e.key)];if(!t)return;
+  const b=document.querySelector('.simtab[data-t="'+t+'"]');if(b){e.preventDefault();b.click();}});
+ const _mission=mission;
+ mission=function(id){const el=document.getElementById(id);const was=el&&el.classList.contains("got");
+  _mission(id);
+  if(!was){try{const sim=document.querySelector("#s_"+TAB+" .missions");const ms=sim?Array.prototype.slice.call(sim.querySelectorAll(".mission:not(.plain)")):[];
+   if(ms.length&&ms.every(function(m){return m.classList.contains("got")})){
+    say("🏆 Every mission in this simulator — done! You’re a real scientist now.","cheer");
+    celebrate(sim);}}catch(e){}}};
+})();
+
+</script>
+</body></html>
