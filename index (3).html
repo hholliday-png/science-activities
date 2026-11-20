@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy in Reactions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE a refined study game: calm, precise, rewarding, never punishing
+   IDEA a periodic table you earn: each objective mastered unlocks its element tile; lab ranks climb with XP
+   PICTURE the nine element tiles of the unit, filling in as the student masters objectives
+   COLOUR white ground, near-black ink, cobalt = energy absorbed, vermilion = energy released, gold for mastery
+   TYPE Schibsted Grotesk for structure, Source Serif 4 for questions; Atkinson Hyperlegible when easy-read is on
+   LAYOUT supports bar, title with player card, element strip, explorer, math toolkit, objectives, test modes; practice in full-screen focus mode */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0e1013);--ink:light-dark(#111318,#eceef2);--mute:light-dark(#555a65,#a0a6b1);--rule:light-dark(#dfe1e6,#2a2e36);--soft:light-dark(#f5f6f8,#16191e);--in:light-dark(#1f56d6,#6a97ff);--out:light-dark(#cf3c1b,#ff6d4a);--ok:light-dark(#0d7a49,#3cc985);--gold:light-dark(#a8820f,#e0b84a);--goldbg:light-dark(#fbf5e2,#2a2416)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Schibsted Grotesk",system-ui,sans-serif;overflow-x:clip}
+.big body{zoom:1.18}
+.easy body,.easy .serif,.easy .qtext,.easy .fb p,.easy .defn,.easy .eqn,.easy .rv p,.easy button,.easy input{font-family:"Atkinson Hyperlegible",Verdana,sans-serif!important;letter-spacing:.01em}
+.easy body{line-height:1.75}
+.calm *{animation:none!important;transition:none!important}
+.band{padding-block:clamp(26px,4vw,52px);padding-left:max(5vw,16px);padding-right:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2,h3{margin:0;line-height:1.08;letter-spacing:-.02em;font-weight:700}
+.serif{font-family:"Source Serif 4",Georgia,serif}
+.sup{border-bottom:1px solid var(--rule);padding-block:10px;background:var(--soft)}
+.sup .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.sup b{font-size:14px;margin-right:4px}
+.tg{font:600 14px "Schibsted Grotesk",sans-serif;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tg::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid var(--mute)}
+.tg[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.tg[aria-pressed=true]::before{border-color:var(--bg);background:var(--bg);box-shadow:inset 0 0 0 3px var(--ink)}
+.head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:32px;align-items:center}
+.head h1{font-size:clamp(34px,5vw,52px);text-wrap:balance}
+.head p{margin:12px 0 0;color:var(--mute);max-width:56ch}
+.player{border:1px solid var(--rule);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.medal{width:72px;height:72px}
+.player h3{font-size:22px}
+.player small{color:var(--mute);font-size:14px}
+.xpbar{height:10px;border-radius:6px;background:var(--rule);margin:8px 0 4px;overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--in),var(--out));border-radius:6px;transition:width .5s ease}
+.pf{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--rule);padding-top:12px}
+.pf div{padding-right:8px}
+.pf b{display:block;font-size:22px;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pf span{font-size:13px;color:var(--mute)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin:40px 0 16px}
+.sec h2{font-size:clamp(24px,3vw,30px)}
+.sec p{margin:0;color:var(--mute);font-size:15px;max-width:62ch}
+.tiles{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;margin-top:30px}
+.tile{aspect-ratio:1/1.12;border:1.5px dashed var(--rule);border-radius:10px;background:var(--bg);color:var(--mute);padding:8px 10px;display:flex;flex-direction:column;text-align:left;cursor:pointer;font:inherit;position:relative}
+.tile .z{font-size:13px;font-weight:600}
+.tile .sy{font-size:clamp(26px,3.2vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1;margin:auto 0 2px}
+.tile .nm{font-size:13px}
+.tile .tm{height:4px;border-radius:2px;background:var(--rule);margin-top:6px;overflow:hidden}
+.tile .tm i{display:block;height:100%;background:var(--ink)}
+.tile.won{border:1.5px solid var(--ink);color:var(--ink)}
+.tile.gold{border:2px solid var(--gold);background:var(--goldbg);color:var(--ink)}
+.tile.gold .sy{color:var(--gold)}
+.tile.gold .tm i{background:var(--gold)}
+.tile:hover{border-color:var(--ink)}
+.tcap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:14px;color:var(--mute)}
+.ex{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:28px;align-items:stretch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{font:600 15px "Schibsted Grotesk",sans-serif;min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fig{position:relative;height:clamp(320px,36vw,420px);border:1px solid var(--rule);border-radius:12px;background:var(--soft)}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font-family:"Schibsted Grotesk",sans-serif;paint-order:stroke;stroke:var(--soft);stroke-width:4px}
+.tog{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px;color:var(--mute)}
+.tog input{width:20px;height:20px;accent-color:var(--ink)}
+.work{border:1px solid var(--rule);border-radius:12px;padding:20px;display:flex;flex-direction:column}
+.work h3{font-size:20px}
+.eqn{font-family:"Source Serif 4",serif;font-size:19px;margin:6px 0 14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+td,th{padding:6px 0;border-bottom:1px solid var(--rule);text-align:left}
+th{font-weight:600;color:var(--mute);font-size:13px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub td{font-weight:700;border-bottom:2px solid var(--ink)}
+.res{margin-top:auto;padding-top:16px}
+.res b{display:block;font-size:clamp(30px,3.4vw,40px);letter-spacing:-.02em;white-space:nowrap}
+.chip{display:inline-block;font-size:14px;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+.kit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.kc{border:1px solid var(--rule);border-radius:12px;padding:20px}
+.kc h3{font-size:19px;margin-bottom:10px}
+.kc ol{margin:0;padding-left:1.3em}
+.kc li{margin:4px 0}
+.kc p{margin:8px 0 0}
+.trick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.trick div{border-radius:10px;padding:10px 12px;color:#fff;font-weight:600;font-size:15px}
+.nl{margin-top:8px}
+.nl label{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-top:8px}
+.nl input[type=range]{width:100%;accent-color:var(--ink);height:28px}
+.line{position:relative;height:34px;margin:14px 0 4px;border-bottom:2px solid var(--ink)}
+.line .z0{position:absolute;left:50%;bottom:-8px;width:2px;height:16px;background:var(--ink)}
+.line .bar{position:absolute;bottom:4px;height:14px;border-radius:3px}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.nlr{font-size:20px;font-weight:700;margin-top:8px}
+.ledger{border-top:2px solid var(--ink)}
+.row{display:grid;grid-template-columns:52px minmax(0,1.6fr) minmax(0,1.3fr) 110px 124px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule)}
+.mini{width:48px;height:48px;border:1.5px dashed var(--rule);border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:20px;color:var(--mute)}
+.mini.won{border:1.5px solid var(--ink);color:var(--ink)}
+.mini.gold{border:2px solid var(--gold);background:var(--goldbg);color:var(--gold)}
+.row h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.row small{display:block;color:var(--mute);font-size:14px;margin-top:2px}
+.meter{height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink);border-radius:4px}
+.lvl{font-size:14px;font-weight:600;white-space:nowrap}
+.btn{font:600 16px "Schibsted Grotesk",sans-serif;min-height:46px;padding:10px 18px;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,.tile:focus-visible{outline:3px solid var(--in);outline-offset:2px}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.mode{border:1px solid var(--rule);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px}
+.mode h3{font-size:21px}
+.mode p{margin:0;color:var(--mute);font-size:15px;flex:1}
+.mode .k{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.foot{color:var(--mute);font-size:14px;border-top:1px solid var(--rule)}
+.ov{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto;display:none}
+.ov.on{display:block}
+.ovtop{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--rule);padding:10px max(5vw,16px);display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:1;flex-wrap:wrap}
+.ovtop .l{font-size:14px;color:var(--mute)}
+.ovtop .r{display:flex;gap:14px;align-items:center;font-size:14px;font-weight:700}
+.prog{position:absolute;left:0;bottom:-1px;height:3px;background:var(--ink);transition:width .35s ease}
+.combo{color:var(--out)}
+.qwrap{max-width:780px;margin:0 auto;padding:clamp(24px,5vh,60px) max(5vw,16px) 72px}
+.qmeta{font-size:14px;color:var(--mute);margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.qtext{font-family:"Source Serif 4",serif;font-size:clamp(22px,2.6vw,28px);line-height:1.32;margin:0 0 24px;font-weight:500;text-wrap:pretty}
+.tools{display:flex;flex-wrap:wrap;gap:6px 18px;margin:-8px 0 18px}
+.lnk{background:none;border:0;padding:0;color:var(--in);font:600 15px "Schibsted Grotesk",sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:44px}
+.opts{display:grid;gap:10px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:center;text-align:left;min-height:58px;padding:12px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink);font:500 17px "Schibsted Grotesk",sans-serif;cursor:pointer}
+.opt kbd{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--rule);border-radius:6px;font:600 13px "Schibsted Grotesk",sans-serif;color:var(--mute)}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.gone{opacity:.35;text-decoration:line-through}
+.opt.ok{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.opt.ok kbd{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opt.no{border-color:var(--out);box-shadow:inset 0 0 0 1px var(--out)}
+.opt.no kbd{background:var(--out);color:#fff;border-color:var(--out)}
+.opt.pick{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.nr{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.nr input{font:600 20px "Schibsted Grotesk",sans-serif;width:10em;padding:12px 14px;border:1px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.nr .u{font-weight:600;color:var(--mute)}
+.guide{margin-top:18px;border:1px solid var(--rule);border-radius:12px;padding:16px 18px;background:var(--soft)}
+.guide h4{margin:0 0 8px;font-size:15px}
+.gs{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--rule);font-size:16px}
+.gs b{white-space:nowrap;color:var(--ok)}
+.gnow{margin-top:10px}
+.gnow p{margin:0 0 8px;font-weight:600}
+.gmsg{font-size:15px;margin-top:6px;color:var(--mute)}
+.calc{margin-top:16px;border:1px solid var(--rule);border-radius:12px;padding:12px;max-width:300px;background:var(--soft)}
+.cd{font:700 26px "Schibsted Grotesk",sans-serif;text-align:right;padding:6px 8px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ck{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ck button{min-height:46px;border-radius:8px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);font:600 18px "Schibsted Grotesk",sans-serif;cursor:pointer}
+.ck button.op{background:var(--ink);color:var(--bg)}
+.fb{margin-top:22px;padding:16px 20px;border-left:3px solid var(--ok);background:var(--soft);border-radius:0 10px 10px 0;animation:rise .3s ease-out}
+.fb.no{border-color:var(--out)}
+.fb b{font-size:16px}
+.fb .xp{float:right;color:var(--gold);font-weight:700}
+.fb p{font-family:"Source Serif 4",serif;font-size:17px;margin:6px 0 0}
+@keyframes rise{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center}
+.tip{font-size:13px;color:var(--mute)}
+.hintx{margin-top:8px;font-family:"Source Serif 4",serif;color:var(--ink);background:var(--goldbg);border-radius:8px;padding:8px 12px}
+.score{font-size:clamp(64px,10vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
+.reward{display:flex;gap:18px;align-items:center;margin:22px 0;padding:16px;border:1px solid var(--rule);border-radius:14px}
+.reward .tile{width:96px;flex:none;cursor:default;animation:rise .5s ease-out}
+.review{margin-top:28px;border-top:2px solid var(--ink)}
+.rv{padding:14px 0;border-bottom:1px solid var(--rule)}
+.rv p{margin:4px 0 0;font-family:"Source Serif 4",serif}
+.rv .a{color:var(--mute);font-size:15px}
+.term{font-size:clamp(36px,6vw,56px);font-weight:700;letter-spacing:-.03em;margin:8px 0 20px}
+.defn{font-family:"Source Serif 4",serif;font-size:22px;line-height:1.4;padding:18px 0 10px;border-top:1px solid var(--rule)}
+.plain{font-size:18px;padding:12px 14px;border-radius:10px;background:var(--goldbg);margin-bottom:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:700;z-index:30;display:none;max-width:calc(100% - 32px)}
+.toast.on{display:block;animation:rise .3s ease-out}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:900px){.head,.ex{grid-template-columns:1fr}.kit,.modes{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(5,minmax(0,1fr))}.row{grid-template-columns:52px minmax(0,1fr) 124px;row-gap:8px}.row .m{grid-column:2/4}.row .lvl{display:none}.row .btn{grid-row:1;grid-column:3}}
+@media(max-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.pf{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px}.opts.two{grid-template-columns:1fr}.row{grid-template-columns:52px minmax(0,1fr)}.row .m{grid-column:1/3}.row .btn{grid-row:auto;grid-column:1/3}.reward{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="sup"><div class="wrap" id="sup" role="group" aria-label="Learning supports"><b>Learning supports</b></div></div>
+
+<main class="band" style="padding-top:30px"><div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Energy in Chemical Reactions I</h1>
+      <p>Chemistry B, Unit 2. Earn XP on every question, climb the lab ranks, and master each objective to collect its element.</p>
+    </div>
+    <div class="player" id="player"></div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+  <div class="tcap"><span>Collect an element at 70% mastery. It turns gold at 100%.</span><span id="tcount"></span></div>
+
+  <div class="sec"><h2>Math toolkit</h2><p>Every calculation in this unit uses the same few steps. Keep these open while you practice.</p></div>
+  <div class="kit">
+    <div class="kc"><h3>The bond energy recipe</h3><ol><li>List the bonds in the reactants and count each kind.</li><li>Multiply: count × bond energy.</li><li>Add them up. That is <b style="color:var(--in)">energy in</b>.</li><li>Do the same for the products. That is <b style="color:var(--out)">energy out</b>.</li><li>ΔH = energy in − energy out.</li></ol><p class="serif">Example: 4 C–H bonds at 413 each → 4 × 413 = 1,652 kJ.</p></div>
+    <div class="kc"><h3>Positive or negative?</h3><div class="nl"><label for="sIn"><span style="color:var(--in)">Energy in</span><span id="vIn"></span></label><input type="range" id="sIn" min="0" max="3000" step="1" value="671"><label for="sOut"><span style="color:var(--out)">Energy out</span><span id="vOut"></span></label><input type="range" id="sOut" min="0" max="3000" step="1" value="854"><div class="line"><span class="z0"></span><span class="bar" id="nlb"></span></div><div class="ends"><span>Negative</span><span>0</span><span>Positive</span></div><div class="nlr" id="nlr" aria-live="polite"></div></div><div class="trick"><div style="background:var(--out)">EXOthermic: heat EXits. ΔH is negative.</div><div style="background:var(--in)">ENDOthermic: heat ENters. ΔH is positive.</div></div></div>
+    <div class="kc"><h3>Heat: q = mcΔT</h3><table><tbody><tr><td><b>q</b></td><td>heat energy, in joules (J)</td></tr><tr><td><b>m</b></td><td>mass, in grams (g)</td></tr><tr><td><b>c</b></td><td>specific heat; water is 4.18 J/g·°C</td></tr><tr><td><b>ΔT</b></td><td>final temp − starting temp</td></tr></tbody></table><p class="serif">50 g of water, 20 °C → 30 °C. ΔT = 10. q = 50 × 4.18 × 10 = 2,090 J.</p><p class="serif" style="color:var(--mute)">Smaller minus bigger is always negative: 671 − 854 = −183.</p></div>
+  </div>
+
+  <div class="sec"><h2>Reaction explorer</h2><p>Pick a reaction. Bonds broken take energy in; bonds formed release energy out.</p></div>
+  <div class="ex">
+    <div>
+      <div class="tabs" id="tabs" role="group" aria-label="Choose a reaction"></div>
+      <div class="fig"><svg id="dg" role="img" aria-label="Energy diagram of the selected reaction"></svg></div>
+      <label class="tog"><input type="checkbox" id="cat"> Show a catalyzed pathway (a lower hill, same ΔH)</label>
+    </div>
+    <div class="work" id="work"></div>
+  </div>
+
+  <div class="sec"><h2>Objectives</h2><p>Mastery counts your latest answer to each question. Missed questions come back at the end of a set, so every set ends in a win.</p></div>
+  <div class="ledger" id="ledger"></div>
+
+  <div class="sec"><h2>Challenges</h2></div>
+  <div class="modes">
+    <div class="mode"><h3>Final exam</h3><span class="k" id="kExam"></span><p>12 questions from every objective. Earn bronze at 70%, silver at 85% and gold at 95%.</p><button class="btn" id="mExam">Start exam</button></div>
+    <div class="mode"><h3>Weak spots</h3><span class="k" id="kWeak">0</span><p>Only the questions you missed most recently. Clear them all to make the list zero.</p><button class="btn ghost" id="mWeak">Review weak spots</button></div>
+    <div class="mode"><h3>Recall drill</h3><span class="k" id="kVocab">0/16</span><p>Sixteen key terms, each with a plain-words version. Say it first, then reveal.</p><button class="btn ghost" id="mVocab">Start drill</button></div>
+  </div>
+</div></main>
+
+<footer class="band foot"><div class="wrap">Built from the Unit 2 lesson notes and bond-energy tables. You earn XP for every attempt, and more for first-try answers and combos. Progress saves in this browser.</div></footer>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-label="Practice">
+  <div class="ovtop"><span class="l" id="ovt"></span><span class="r"><span id="ovxp" style="color:var(--gold)"></span><span id="ovc" class="combo"></span><button class="btn ghost" id="close">Exit</button></span><i class="prog" id="prog"></i></div>
+  <div class="qwrap" id="qw" aria-live="polite"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const L=[
+{n:"Math skills",el:["H",1,"Hydrogen"],o:"Multiply, add and subtract the way this unit needs, including negative answers.",q:[
+{q:"Multiply: 4 × 413",n:1652,u:"",t:0,h:"Split 413 into 400 + 13.",s:[["4 × 400",1600],["4 × 13",52],["1,600 + 52",1652]],e:"4 × 413 = 1,652. In this unit, that is four C–H bonds."},
+{q:"Add: 614 + 1,652 + 432",n:2698,u:"",t:0,h:"Add two numbers first, then the third.",s:[["614 + 1,652",2266],["2,266 + 432",2698]],e:"614 + 1,652 + 432 = 2,698."},
+{q:"Subtract: 436 − 193",n:243,u:"",t:0,h:"Take away 200, then add 7 back.",s:[["436 − 200",236],["You took away 7 too many. 236 + 7",243]],e:"436 − 193 = 243."},
+{q:"Subtract: 671 − 854. The second number is bigger.",n:-183,u:"",t:0,h:"Do bigger minus smaller, then put a minus sign in front.",s:[["Bigger minus smaller: 854 − 671",183],["You started with the smaller number, so the answer is negative. Type it with a minus sign.",-183]],e:"671 − 854 = −183. Smaller minus bigger is always negative."},
+{q:"When you subtract a bigger number from a smaller number, the answer is",o:["negative","positive","zero","always 100"],a:0,e:"Example: 5 − 8 = −3. In this unit, a negative ΔH means energy was released."},
+{q:"ΔH = −506 kJ. The minus sign tells you the reaction is",eo:1,a:0,e:"Negative means more energy came out than went in. Heat EXits: EXOthermic."},
+{q:"In q = mcΔT, what does ΔT mean?",o:["Change in temperature (final − starting)","Total time","Mass of the sample","Heat energy"],a:0,e:"Δ (delta) means 'change in.' From 20 °C to 30 °C, ΔT = 30 − 20 = 10 °C."},
+{q:"Multiply: 2 × 312.12",n:624.24,u:"",t:.01,h:"Do 2 × 312, then 2 × 0.12, then add.",s:[["2 × 312",624],["2 × 0.12",.24],["624 + 0.24",624.24]],e:"2 × 312.12 = 624.24."}]},
+{n:"Total bond energy",el:["C",6,"Carbon"],o:"Use changes in total bond energy to tell if a reaction releases or absorbs energy.",q:[
+{q:"Which expression gives the change in bond energy, ΔH?",o:["Reactant bond energy − product bond energy","Product bond energy − reactant bond energy","Reactant bond energy + product bond energy","Product bond energy ÷ reactant bond energy"],a:0,e:"Energy in (breaking reactant bonds) minus energy out (forming product bonds)."},
+{q:"For 2H₂ + O₂ → 2H₂O, reactant bonds total 1,362 kJ and product bonds total 1,868 kJ. What is ΔH?",n:-506,u:"kJ",h:"Reactants − products. The second number is bigger.",s:[["Bigger minus smaller: 1,868 − 1,362",506],["Reactants were smaller, so ΔH is negative. Type it with a minus sign.",-506]],e:"1,362 − 1,868 = −506 kJ. Negative means exothermic."},
+{q:"Reactant bonds total 436 kJ and product bonds total 193 kJ. What is ΔH?",n:243,u:"kJ",h:"Reactants − products.",s:[["436 − 193",243]],e:"436 − 193 = +243 kJ, so it is endothermic."},
+{q:"A reaction has ΔH = +243 kJ. Classify it.",eo:1,a:1,e:"Positive ΔH: more energy went in than came out. Heat ENters: ENDOthermic."},
+{q:"Enthalpy is defined as",o:["H = E + PV","H = E − PV","H = mcΔT","H = PE + KE"],a:0,e:"Enthalpy is internal energy plus pressure × volume."},
+{q:"In an exothermic reaction, the products have ___ enthalpy than the reactants.",o:["less","more","the same","zero"],a:0,e:"Energy left the system, so the products end lower."},
+{q:"Hess's law says the enthalpy change of a reaction is",o:["the same in one step or many steps","always negative","larger with more steps","only measurable directly"],a:0,e:"ΔH depends only on the start and the end, so it can be calculated even when it can't be measured."}]},
+{n:"The reaction system",el:["N",7,"Nitrogen"],o:"Identify the chemical reaction, the system and the surroundings.",q:[
+{q:"In a chemical reaction, the system is",o:["the reactants and products being studied","the container and the lab","everything in the universe","only the products"],a:0,e:"Everything else, including the container, is the surroundings."},
+{q:"In an instant cold pack, the plastic pouch belongs to the",o:["surroundings","system","reactants","products"],a:0,e:"The system is the ammonium nitrate and water. The pouch is outside it."},
+{q:"While your lunch is digested, which is part of the system?",o:["The food and stomach acid","The stomach wall","The air around you","Your whole body"],a:0,e:"The food and acid react. Your stomach, body and the air are the surroundings."},
+{q:"A lit match gives off heat and light. Classify the reaction.",eo:1,a:0,e:"Combustion releases energy to the surroundings."},
+{q:"The law of conservation of energy says energy",o:["can't be created or destroyed, only changed","is destroyed in exothermic reactions","is created in endothermic reactions","only exists as heat"],a:0,e:"Every bit of energy must be accounted for between the system and the surroundings."},
+{q:"After ammonium nitrate dissolves in a cold pack, which has more internal energy?",o:["The ions in solution","The dry solid salt","They are equal","The pouch"],a:0,e:"Energy flowed in from the surroundings and is stored in the ions. That's why the pack feels cold."}]},
+{n:"Broken bonds",el:["O",8,"Oxygen"],o:"Model which bonds break in a reaction and the energy this takes.",q:[
+{q:"Breaking a chemical bond",o:["absorbs energy (endothermic)","releases energy (exothermic)","does neither","needs a catalyst"],a:0,e:"A bond must take in energy before it can break."},
+{q:"In 2H₂O → 2H₂ + O₂, how many O–H bonds are broken?",n:4,u:"bonds",t:0,h:"Each water molecule has two O–H bonds.",s:[["O–H bonds in one H₂O",2],["2 molecules × 2 bonds",4]],e:"2 × 2 = 4 bonds."},
+{q:"An O–H bond is 467 kJ/mol. How much energy does 2H₂O need to break all its bonds?",n:1868,u:"kJ",h:"There are four O–H bonds.",s:[["How many O–H bonds?",4],["4 × 467",1868]],e:"4 × 467 = 1,868 kJ."},
+{q:"Compared with weak bonds, strong bonds have",o:["higher bond energy and are harder to break","lower bond energy and are easier to break","the same bond energy","no bond energy"],a:0,e:"Stronger bonds are more stable and need more energy to break."},
+{q:"In 6CO₂ + 6H₂O + energy → C₆H₁₂O₆ + 6O₂, energy is with the reactants because the reaction is",o:["endothermic","exothermic","a combustion","balanced"],a:0,e:"Energy taken in is written on the reactant side."},
+{q:"For 2H₂ + O₂ → 2H₂O, find the energy to break the reactant bonds. H–H is 432, O=O is 498 kJ/mol.",n:1362,u:"kJ",h:"Two H–H bonds and one O=O bond.",s:[["2 × 432",864],["864 + 498",1362]],e:"2(432) + 498 = 1,362 kJ."},
+{q:"When coal burns (C + O₂ → CO₂), which bonds break?",o:["C–C and C=C in the coal, and O=O in oxygen","Only C=O bonds","Only O–H bonds","No bonds break"],a:0,e:"Bonds in the coal and in oxygen break, then the atoms join into CO₂ and release heat."}]},
+{n:"Forming bonds",el:["Na",11,"Sodium"],o:"Model which bonds form and why bonded atoms are more stable.",q:[
+{q:"Forming a chemical bond",o:["releases energy","absorbs energy","uses up a catalyst","raises the atoms' energy"],a:0,e:"Bonded atoms are in a lower, more stable state, so energy is released."},
+{q:"A covalent bond usually forms between atoms with",o:["similar electronegativities","very different electronegativities","no outer electrons","opposite charges already"],a:0,e:"It's an even tug-of-war, so the electrons are shared."},
+{q:"Electronegativity differences: H–Cl 0.9, O–H 1.4, Na–Br 1.9. Which is most likely ionic?",o:["Na–Br","O–H","H–Cl","All equally"],a:0,e:"The biggest difference lets one atom pull an electron all the way off the other."},
+{q:"Which bond is the shortest and strongest?",o:["N≡N, a triple bond","O=O, a double bond","Cl–Cl, a single bond","They are equal"],a:0,e:"More shared pairs hold atoms closer: triple > double > single."},
+{q:"In CO₂, carbon bonds to each oxygen with",o:["a double covalent bond","a single covalent bond","an ionic bond","a metallic bond"],a:0,e:"Sharing two pairs gives every atom a full outer shell."},
+{q:"Freon products: 2 C–F (485), 2 C–Cl (339), 2 H–F (565), 2 H–Cl (427) kJ/mol. Total energy released?",n:3632,u:"kJ",h:"Double each value, then add.",s:[["2 × 485",970],["2 × 339",678],["2 × 565",1130],["2 × 427",854],["970 + 678 + 1,130 + 854",3632]],e:"970 + 678 + 1,130 + 854 = 3,632 kJ."},
+{q:"Breaking the freon reactants takes 2,438 kJ. Forming the products releases 3,632 kJ. What is ΔH?",n:-1194,u:"kJ",h:"Energy in − energy out. The second number is bigger.",s:[["Bigger minus smaller: 3,632 − 2,438",1194],["Energy in was smaller, so ΔH is negative. Type it with a minus sign.",-1194]],e:"2,438 − 3,632 = −1,194 kJ: exothermic."}]},
+{n:"Energy transfer",el:["Cl",17,"Chlorine"],o:"Describe how energy moves between a system and its surroundings.",q:[
+{q:"A metal fork held in a fire gets hot in your hand. This is",o:["conduction","convection","radiation","combustion"],a:0,e:"Conduction is heat moving by touching."},
+{q:"Water circulating in a heated pot is an example of",o:["convection","conduction","radiation","activation"],a:0,e:"Convection is heat moving with a flowing liquid or gas."},
+{q:"Which kind of energy transfer needs no matter?",o:["Radiation","Conduction","Convection","All need matter"],a:0,e:"Radiation travels as waves, like sunlight through space."},
+{q:"A reaction flask freezes to a wet wooden board. Heat left the board by",o:["conduction","radiation","convection","evaporation"],a:0,e:"The flask and the board were touching."},
+{q:"A chemical hand warmer heats your hands. Classify the reaction.",eo:1,a:0,e:"It gives energy to the surroundings, your hands."},
+{q:"A flask turns very cold as two chemicals react. The sign of ΔE is",o:["positive","negative","zero","unknown"],a:0,e:"The system took in energy from the surroundings: endothermic, ΔE is positive."},
+{q:"An energy diagram with no numbers on its axis gives you",o:["qualitative information only","exact numbers","no information","the exact ΔH"],a:0,e:"You can tell exo or endo, but not how much energy."},
+{q:"Metal pots often have wooden or plastic handles because these materials",o:["don't conduct heat well","radiate heat away","speed up convection","are catalysts"],a:0,e:"A poor conductor keeps the handle cool enough to hold."}]},
+{n:"Potential and kinetic energy",el:["Fe",26,"Iron"],o:"Track how potential and kinetic energy change in reactions and changes of state.",q:[
+{q:"As water falls from the top of a dam, its energy changes from",o:["stored (potential) energy to motion (kinetic) energy","motion energy to stored energy","chemical energy to heat","it doesn't change"],a:0,e:"Ignoring friction, PE + KE stays the same as it falls."},
+{q:"Temperature measures",o:["the average kinetic energy of the particles","total potential energy","bond energy","activation energy"],a:0,e:"Hotter means faster-moving particles."},
+{q:"Activation energy is",o:["the push needed to break reactant bonds and start the reaction","energy released by products","the ΔH","energy stored in a catalyst"],a:0,e:"It's the hill on the energy diagram that reactants must get over."},
+{q:"While water boils, its temperature stays the same. The added energy raises the molecules'",o:["potential energy","kinetic energy","bond energy","mass"],a:0,e:"The molecules break free of each other instead of speeding up."},
+{q:"In a thermochemical equation for an exothermic reaction, the energy is written",o:["as a product","as a reactant","above the arrow","not at all"],a:0,e:"Example: 2Cu + O₂ → 2CuO + 312.12 kJ."},
+{q:"2Cu + O₂ → 2CuO + 312.12 kJ. How much energy is released when 4 mol of Cu react?",n:624.24,u:"kJ",t:.1,h:"4 mol is twice 2 mol, so double the energy.",s:[["4 mol is how many times 2 mol?",2],["2 × 312.12",624.24]],e:"2 × 312.12 = 624.24 kJ."},
+{q:"A reaction's energy change is +177.8 kJ. In its equation, 177.8 kJ is written",o:["on the reactant side","on the product side","nowhere","on both sides"],a:0,e:"Positive means endothermic, so energy goes with the reactants."},
+{q:"Rusting gives off heat, but rusting iron doesn't feel warm because",o:["the reaction is very slow","it absorbs heat","it has no activation energy","iron doesn't conduct"],a:0,e:"The energy comes out very gradually."}]},
+{n:"Relative potential energy",el:["Cu",29,"Copper"],o:"Compare reactant and product energies, and how catalysts change the path.",q:[
+{q:"In an exothermic reaction, the reactants have ___ potential energy than the products.",o:["higher","lower","the same","no"],a:0,e:"Energy flows out, so the system ends lower."},
+{q:"A catalyst speeds up a reaction by",o:["giving it a path with a lower activation energy","raising the products' energy","being burned as fuel","changing ΔH"],a:0,e:"It lowers the hill and isn't used up."},
+{q:"Why can't you collect the substances at the top of the energy hill?",o:["That high-energy state is unstable","They are too heavy","They are already products","They are catalysts"],a:0,e:"Chemicals always move toward lower, more stable energy."},
+{q:"A bond forms between two atoms when",o:["their energy after bonding is lower","their energy after bonding is higher","their charges are equal","activation energy is zero"],a:0,e:"If bonding lowers the energy, the bond forms."},
+{q:"An energy diagram shows the products higher than the reactants. Classify the reaction.",eo:1,a:1,e:"The products hold more energy, so energy was taken in."},
+{q:"What are the reactants when iron rusts?",o:["Iron, water and oxygen","Iron and carbon dioxide","Rust and water","Only iron"],a:0,e:"The product is rust, an iron oxide."},
+{q:"Painting a steel bridge slows rusting because the paint",o:["keeps oxygen and water away from the iron","is a catalyst","removes activation energy","makes it endothermic"],a:0,e:"If the reactants can't touch, they can't react. The downside: it costs money and must be redone."}]},
+{n:"Calculation lab",el:["Au",79,"Gold"],o:"Full bond-energy and heat calculations from the unit's tables.",q:[
+{q:"C₂H₄ + H₂ → C₂H₆. Find the total bond energy of the reactants. C=C 614, C–H 413, H–H 432 kJ/mol.",n:2698,u:"kJ",h:"One C=C, four C–H and one H–H.",s:[["4 × 413 (four C–H)",1652],["614 + 1,652 + 432",2698]],e:"614 + 4(413) + 432 = 2,698 kJ."},
+{q:"The products are one C–C (347) and six C–H (413). What is ΔH for C₂H₄ + H₂ → C₂H₆?",n:-127,u:"kJ",h:"Find the products' total, then reactants − products.",s:[["6 × 413 (six C–H)",2478],["347 + 2,478 (energy out)",2825],["Bigger minus smaller: 2,825 − 2,698",127],["Energy in was smaller, so ΔH is negative. Final answer:",-127]],e:"2,698 − 2,825 = −127 kJ: exothermic."},
+{q:"H₂ + Cl₂ → 2HCl. H–H 432, Cl–Cl 239, H–Cl 427 kJ/mol. What is ΔH?",n:-183,u:"kJ",h:"(432 + 239) − 2(427).",s:[["432 + 239 (energy in)",671],["2 × 427 (energy out)",854],["Bigger minus smaller: 854 − 671",183],["Energy in was smaller, so ΔH is negative. Final answer:",-183]],e:"671 − 854 = −183 kJ: exothermic."},
+{q:"6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂. C=O 799, O–H 467, O=O 495 kJ/mol; glucose's bonds total 9,467 kJ. What is ΔH?",n:2755,u:"kJ",h:"Reactants: 12 C=O and 12 O–H. Products: glucose plus 6 O=O.",s:[["12 × 799",9588],["12 × 467",5604],["9,588 + 5,604 (energy in)",15192],["6 × 495",2970],["9,467 + 2,970 (energy out)",12437],["15,192 − 12,437",2755]],e:"15,192 − 12,437 = +2,755 kJ: endothermic."},
+{q:"How much heat raises 50 g of water from 20 °C to 30 °C? Use q = mcΔT, c = 4.18 J/g·°C.",n:2090,u:"J",h:"ΔT = 30 − 20. Then multiply 50 × 4.18 × ΔT.",s:[["ΔT: 30 − 20",10],["50 × 4.18",209],["209 × 10",2090]],e:"q = 50 × 4.18 × 10 = 2,090 J."},
+{q:"Baking soda and vinegar cool by about 4 °C as they react. The energy change is",o:["positive: endothermic","negative: exothermic","zero","unknown"],a:0,e:"Energy moved from the surroundings into the mixture."},
+{q:"An airbag's reaction 2NaN₃ → 2Na + 3N₂ releases energy because",o:["forming the product bonds releases more than breaking the reactant bonds takes","breaking bonds releases energy","the explosion creates energy","nitrogen has no bonds"],a:0,e:"The extra goes to the surroundings. Total energy is conserved."}]}
+];
+const V=[["Bond energy","The energy required to break a chemical bond; the same amount is released when it forms.","How much energy it takes to pull two atoms apart."],["Chemical bond","The force that holds atoms, molecules or ions together in a compound.","What holds atoms together."],["Endothermic reaction","A reaction with a net input of energy from the surroundings; ΔH is positive.","Takes in heat. Things around it get colder."],["Exothermic reaction","A reaction with a net output of energy to the surroundings; ΔH is negative.","Gives off heat. Things around it get warmer."],["Enthalpy","A system's internal energy plus the product of its pressure and volume: H = E + PV.","The total heat energy stored in a system."],["System","The reactants and products of the reaction being studied.","The chemicals that are reacting."],["Surroundings","Everything outside the system, including the container.","Everything else, even the cup or flask."],["Electronegativity","A measure of an atom's ability to attract electrons to itself.","How hard an atom pulls on electrons."],["Conduction","Transfer of energy by direct contact.","Heat moving by touching."],["Convection","Transfer of energy by currents of moving fluid.","Heat moving with flowing liquid or air."],["Radiation","Transfer of energy as electromagnetic waves; no matter required.","Heat moving through space as waves, like sunlight."],["Activation energy","The energy that must be added to a system to break the bonds of the reactants.","The push a reaction needs to get started."],["Kinetic energy","Energy of motion.","Energy of moving things."],["Potential energy","Energy due to position or composition.","Stored energy."],["Thermochemistry","The study of energy changes in chemical and physical changes.","The study of heat in chemistry."],["Catalyst","A substance that speeds a reaction by lowering its activation energy without being used up.","A helper that speeds up a reaction and isn't used up."]];
+const RX=[
+{k:"Ethylene + hydrogen",eq:"C₂H₄ + H₂ → C₂H₆",b:[["C=C",1,614],["C–H",4,413],["H–H",1,432]],f:[["C–C",1,347],["C–H",6,413]]},
+{k:"Hydrogen chloride",eq:"H₂ + Cl₂ → 2HCl",b:[["H–H",1,432],["Cl–Cl",1,239]],f:[["H–Cl",2,427]]},
+{k:"Water (rocket fuel)",eq:"2H₂ + O₂ → 2H₂O",b:[["H–H",2,432],["O=O",1,498]],f:[["O–H",4,467]]},
+{k:"Photosynthesis",eq:"6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂",b:[["C=O",12,799],["O–H",12,467]],f:[["C₆H₁₂O₆",1,9467],["O=O",6,495]]}];
+const RANKS=[[0,"Lab apprentice"],[150,"Lab assistant"],[400,"Analyst"],[800,"Researcher"],[1300,"Principal investigator"],[2000,"Laureate"]];
+const SUP=[["big","Larger text"],["easy","Easy-read font"],["read","Read aloud"],["few","Fewer choices"],["notime","No timer"],["calm","Calm mode"]];
+const KEY="u2game";
+let S={h:{},v:{},xp:0,exam:null,combo:0,best:0,n:0,c:0,days:0,last:"",sup:{}};
+try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d)S=Object.assign(S,d)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const fmt=n=>(n<0?"−":"")+Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:2});
+const ALL=[];L.forEach((l,i)=>l.q.forEach((q,j)=>ALL.push(Object.assign({id:i+"-"+j,li:i},q))));
+const mast=i=>{const qs=ALL.filter(q=>q.li===i);return qs.filter(q=>S.h[q.id]===1).length/qs.length};
+const tried=i=>ALL.filter(q=>q.li===i&&S.h[q.id]!==undefined).length;
+const level=(m,t)=>!t?"Not started":m>=1?"Mastered":m>=.7?"Proficient":m>=.4?"Developing":"Beginning";
+const rankIdx=()=>{let r=0;RANKS.forEach((x,i)=>{if(S.xp>=x[0])r=i});return r};
+const medalOf=p=>p>=95?"Gold":p>=85?"Silver":p>=70?"Bronze":"";
+const canSpeak="speechSynthesis" in window;
+function say(t){if(!canSpeak)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/→/g," makes ").replace(/Δ/g,"delta ").replace(/−/g," minus ").replace(/×/g," times ").replace(/₂/g," 2 ").replace(/₃/g," 3 ").replace(/₄/g," 4 ").replace(/₆/g," 6 ").replace(/₁₂/g," 12 ").replace(/___/g," blank "));u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+let tt=null;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),3200)}
+function addXP(n){const r0=rankIdx();S.xp+=n;if(P)P.xp+=n;const r1=rankIdx();if(r1>r0)toast("Rank up: "+RANKS[r1][1]);}
+function day(){const d=new Date(),t=d.toDateString(),y=new Date(d-864e5).toDateString();if(S.last!==t){S.days=S.last===y?S.days+1:1;S.last=t}}
+/* supports */
+function applySup(){const h=document.documentElement;SUP.forEach(s=>h.classList.toggle(s[0],!!S.sup[s[0]]&&["big","easy","calm"].includes(s[0])))}
+function supBar(){$("sup").innerHTML='<b>Learning supports</b>'+SUP.filter(s=>s[0]!=="read"||canSpeak).map(s=>'<button class="tg" aria-pressed="'+!!S.sup[s[0]]+'" data-s="'+s[0]+'">'+s[1]+'</button>').join('')}
+$("sup").addEventListener("click",e=>{const b=e.target.closest(".tg");if(!b)return;const k=b.dataset.s;S.sup[k]=!S.sup[k];save();supBar();applySup();setTimeout(diagram,50)});
+/* player + tiles */
+function medalSvg(ri){const c=["#9aa0ab","#7d8796","#1f56d6","#cf3c1b","#6b4fd6","#a8820f"][ri];return'<svg class="medal" viewBox="0 0 72 72" aria-hidden="true"><polygon points="36,3 65,19.5 65,52.5 36,69 7,52.5 7,19.5" fill="'+c+'"/><polygon points="36,10 59,23 59,49 36,62 13,49 13,23" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/><text x="36" y="44" text-anchor="middle" font-size="24" font-weight="700" fill="#fff" stroke-width="0" font-family="Schibsted Grotesk,sans-serif">'+(ri+1)+'</text></svg>'}
+function player(){
+  const ri=rankIdx(),cur=RANKS[ri],nx=RANKS[ri+1],pct=nx?(S.xp-cur[0])/(nx[0]-cur[0])*100:100;
+  const tot=ALL.length,got=ALL.filter(q=>q.id&&S.h[q.id]===1).length;
+  $("player").innerHTML=medalSvg(ri)+'<div><small>Rank '+(ri+1)+' of 6</small><h3>'+cur[1]+'</h3><div class="xpbar" role="progressbar" aria-valuenow="'+Math.round(pct)+'" aria-valuemin="0" aria-valuemax="100" aria-label="XP to next rank"><i style="width:'+pct+'%"></i></div><small>'+(nx?fmt(nx[0]-S.xp)+' XP to '+nx[1]:'Top rank reached')+'</small></div><div class="pf"><div><b>'+fmt(S.xp)+'</b><span>Total XP</span></div><div><b>'+S.days+'</b><span>Day streak</span></div><div><b>'+Math.round(got/tot*100)+'%</b><span>Unit mastery</span></div><div><b>'+(S.exam&&medalOf(S.exam.p)?medalOf(S.exam.p):'—')+'</b><span>Exam medal</span></div></div>';
+}
+const tileHtml=(i,cls)=>{const l=L[i],m=mast(i),c=m>=1?'gold':m>=.7?'won':'';return'<button class="tile '+c+' '+(cls||'')+'" data-t="'+i+'" aria-label="'+l.el[2]+', '+l.n+', '+Math.round(m*100)+'% mastered"><span class="z">'+l.el[1]+'</span><span class="sy">'+l.el[0]+'</span><span class="nm">'+l.el[2]+'</span><span class="tm"><i style="width:'+(m*100)+'%"></i></span></button>'};
+function tiles(){$("tiles").innerHTML=L.map((_,i)=>tileHtml(i)).join('');const w=L.filter((_,i)=>mast(i)>=.7).length;$("tcount").textContent=w+" of 9 elements collected"}
+/* math toolkit slider */
+function nl(){const a=+$("sIn").value,b=+$("sOut").value,d=a-b;$("vIn").textContent=fmt(a)+" kJ";$("vOut").textContent=fmt(b)+" kJ";const w=Math.min(Math.abs(d)/3000*50,50);const bar=$("nlb");bar.style.width=w+"%";bar.style.left=(d<0?50-w:50)+"%";bar.style.background=d<0?"var(--out)":"var(--in)";$("nlr").innerHTML='ΔH = '+fmt(a)+' − '+fmt(b)+' = <span style="color:'+(d<0?'var(--out)':d>0?'var(--in)':'var(--ink)')+'">'+(d>0?'+':'')+fmt(d)+' kJ</span><br><span style="font-size:15px;font-weight:600;color:var(--mute)">'+(d<0?'Negative: exothermic, energy released':d>0?'Positive: endothermic, energy absorbed':'Zero: no net change')+'</span>'}
+$("sIn").addEventListener("input",nl);$("sOut").addEventListener("input",nl);
+/* explorer */
+let rx=0;
+function tabs(){$("tabs").innerHTML=RX.map((r,i)=>'<button class="tab" aria-pressed="'+(i===rx)+'" data-i="'+i+'">'+r.k+'</button>').join('')}
+function calc(r){const i=r.b.reduce((s,x)=>s+x[1]*x[2],0),o=r.f.reduce((s,x)=>s+x[1]*x[2],0);return{i,o,d:i-o}}
+function work(){
+  const r=RX[rx],c=calc(r),exo=c.d<0;
+  const rows=a=>a.map(x=>'<tr><td>'+x[0]+'</td><td class="n">'+x[1]+' × '+fmt(x[2])+'</td><td class="n">'+fmt(x[1]*x[2])+'</td></tr>').join('');
+  $("work").innerHTML='<h3>Worked sum</h3><div class="eqn">'+r.eq+'</div><table><thead><tr><th>Bonds broken</th><th class="n">count × kJ/mol</th><th class="n">kJ</th></tr></thead><tbody>'+rows(r.b)+'<tr class="sub"><td>Energy in</td><td></td><td class="n" style="color:var(--in)">'+fmt(c.i)+'</td></tr></tbody></table><table style="margin-top:14px"><thead><tr><th>Bonds formed</th><th class="n">count × kJ/mol</th><th class="n">kJ</th></tr></thead><tbody>'+rows(r.f)+'<tr class="sub"><td>Energy out</td><td></td><td class="n" style="color:var(--out)">'+fmt(c.o)+'</td></tr></tbody></table><div class="res"><span style="font-size:14px;color:var(--mute)">ΔH = '+fmt(c.i)+' − '+fmt(c.o)+'</span><b>'+(c.d>0?"+":"")+fmt(c.d)+' kJ</b><span class="chip" style="background:'+(exo?'var(--out)':'var(--in)')+'">'+(exo?'Exothermic: energy released':'Endothermic: energy absorbed')+'</span></div>';
+}
+const svg=$("dg");
+function diagram(){
+  const W=svg.clientWidth,H=svg.clientHeight;if(!W)return;
+  const r=RX[rx],c=calc(r),cat=$("cat").checked,nar=W<520;
+  const m={l:nar?20:52,r:nar?20:40,t:44,b:40},lo=Math.min(0,c.d),hi=c.i;
+  const y=v=>m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo));
+  const iw=W-m.l-m.r,x0=m.l,x1=m.l+iw*.26,x2=m.l+iw*.37,x3=m.l+iw*.63,x4=m.l+iw*.74,x5=W-m.r;
+  const yr=y(0),ya=y(c.i),yp=y(c.d),ex=c.d<0;
+  let g='<defs><marker id="ai" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--in)"/></marker><marker id="ao" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--out)"/></marker></defs>';
+  if(!nar)g+='<text transform="translate('+(m.l-30)+','+((m.t+H-m.b)/2)+') rotate(-90)" text-anchor="middle" font-size="13" fill="var(--mute)">Potential energy</text>';
+  g+='<path d="M'+x0+','+yr+' H'+x1+' C'+(x1+iw*.05)+','+yr+' '+(x2-iw*.05)+','+ya+' '+x2+','+ya+' H'+x3+' C'+(x3+iw*.05)+','+ya+' '+(x4-iw*.05)+','+yp+' '+x4+','+yp+' H'+x5+'" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 5" opacity=".55"/>';
+  if(cat){const yc=y(Math.max(c.d,0)+(c.i-Math.max(c.d,0))*.35);g+='<path d="M'+x1+','+yr+' C'+(x1+iw*.12)+','+yr+' '+x2+','+yc+' '+((x2+x3)/2)+','+yc+' C'+x3+','+yc+' '+(x4-iw*.12)+','+yp+' '+x4+','+yp+'" fill="none" stroke="var(--ok)" stroke-width="2.5"/><text x="'+((x2+x3)/2)+'" y="'+(yc-10)+'" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ok)">Catalyzed path</text>';}
+  [[x0,x1,yr,"Reactants"],[x2,x3,ya,"Separated atoms"],[x4,x5,yp,"Products"]].forEach(p=>{g+='<line x1="'+p[0]+'" x2="'+p[1]+'" y1="'+p[2]+'" y2="'+p[2]+'" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><text x="'+((p[0]+p[1])/2)+'" y="'+(p[2]-10)+'" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">'+(nar&&p[3]==="Separated atoms"?"Atoms":p[3])+'</text>'});
+  const ax=(x1+x2)/2-6,bx=(x3+x4)/2+6;
+  g+='<line x1="'+ax+'" y1="'+(yr-4)+'" x2="'+ax+'" y2="'+(ya+8)+'" stroke="var(--in)" stroke-width="3" marker-end="url(#ai)"/><line x1="'+bx+'" y1="'+(ya+4)+'" x2="'+bx+'" y2="'+(yp-8)+'" stroke="var(--out)" stroke-width="3" marker-end="url(#ao)"/>';
+  const lab=(x,yv,t,col,anc)=>'<text x="'+x+'" y="'+yv+'" text-anchor="'+anc+'" font-size="14" font-weight="700" fill="'+col+'">'+t+'</text>';
+  g+=lab(ax-8,(yr+ya)/2,(nar?"":"In ")+"+"+fmt(c.i),"var(--in)","end")+lab(bx+8,(ya+yp)/2,(nar?"":"Out ")+"−"+fmt(c.o),"var(--out)","start");
+  const dx=x5-6;g+='<line x1="'+dx+'" x2="'+dx+'" y1="'+yr+'" y2="'+yp+'" stroke="'+(ex?'var(--out)':'var(--in)')+'" stroke-width="2"/><line x1="'+(x4+(x5-x4)*.4)+'" x2="'+x5+'" y1="'+yr+'" y2="'+yr+'" stroke="var(--mute)" stroke-width="1" stroke-dasharray="3 3"/>';
+  g+=lab(dx-8,Math.min(Math.max(yr,yp)+24,H-8),"ΔH "+(c.d>0?"+":"")+fmt(c.d)+" kJ",ex?"var(--out)":"var(--in)","end");
+  svg.innerHTML=g;
+}
+const dgRO=new ResizeObserver(diagram);dgRO.observe(svg);
+/* ledger */
+function ledger(){
+  $("ledger").innerHTML=L.map((l,i)=>{const m=mast(i),t=tried(i),c=m>=1?'gold':m>=.7?'won':'';return'<div class="row"><span class="mini '+c+'" aria-hidden="true">'+l.el[0]+'</span><div><h3>'+l.n+'</h3><small>'+l.o+'</small></div><div class="m"><div class="meter" aria-label="'+Math.round(m*100)+'% mastered"><i style="width:'+(m*100)+'%"></i></div><small style="margin-top:6px;display:block;font-size:13px">'+Math.round(m*100)+'% · '+t+' of '+l.q.length+' tried</small></div><span class="lvl">'+level(m,t)+'</span><button class="btn '+(m>=1?'ghost':'')+'" data-p="'+i+'">'+(t?(m>=1?'Replay':'Continue'):'Begin')+'</button></div>'}).join('');
+  const weak=ALL.filter(q=>S.h[q.id]===0).length;$("kWeak").textContent=weak;$("mWeak").disabled=!weak;
+  $("kExam").textContent=S.exam?(medalOf(S.exam.p)||"Best")+" · "+S.exam.p+"%":"Not taken yet";
+  $("kVocab").textContent=V.filter((_,i)=>S.v[i]===1).length+"/16";
+}
+function refresh(){player();tiles();ledger();save()}
+/* focus mode */
+const ov=$("ov"),qw=$("qw");let P=null,VD=null,tick=null;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function prep(q){if(!q.o)return Object.assign({},q);let ord=q.o.map((_,k)=>k);if(S.sup.few){const w=shuffle(ord.filter(k=>k!==q.a))[0];ord=[q.a,w]}return Object.assign({},q,{ord:shuffle(ord)})}
+function lock(){ov.classList.add("on");document.body.style.overflow="hidden"}
+function open(kind,title,qs){VD=null;P={kind,title,qs:qs.map(prep),i:0,ans:false,res:[],re:{},t0:Date.now(),xp:0,before:L.map((_,i)=>mast(i))};lock();ask();if(kind==="exam"){clearInterval(tick);tick=setInterval(()=>{if(P&&!P.done)top()},1000)}}
+function shut(){ov.classList.remove("on");document.body.style.overflow="";P=null;VD=null;clearInterval(tick);try{canSpeak&&speechSynthesis.cancel()}catch(e){}refresh()}
+function clock(){const s=Math.floor((Date.now()-P.t0)/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function top(){const p=P,n=p.qs.length;$("ovt").textContent=p.title+" · "+Math.min(p.i+1,n)+" of "+n+(p.kind==="exam"&&!S.sup.notime?" · "+clock():"");$("prog").style.width=(p.i/n*100)+"%";$("ovxp").textContent="+"+p.xp+" XP";$("ovc").textContent=S.combo>=2?"Combo ×"+S.combo:""}
+let C={d:"0",a:null,op:null,f:false},calcOn=false;
+function calcHtml(){return'<div class="calc" id="calc"><div class="cd" id="cd" aria-live="polite">'+C.d+'</div><div class="ck">'+["7","8","9","÷","4","5","6","×","1","2","3","−","0",".","±","+","C","=","Use"].map(k=>'<button type="button" data-c="'+k+'" class="'+("÷×−+=".includes(k)&&k.length===1?'op':'')+'"'+(k==="Use"?' style="grid-column:span 2"':'')+' aria-label="'+({"÷":"divide","×":"times","−":"minus","±":"change sign","C":"clear","Use":"use this number"}[k]||k)+'">'+(k==="Use"?"Use answer":k)+'</button>').join('')+'</div></div>'}
+function cpress(k){
+  const comp=()=>{const b=parseFloat(C.d),a=C.a;let r=C.op==="+"?a+b:C.op==="−"?a-b:C.op==="×"?a*b:b===0?NaN:a/b;C.d=isFinite(r)?String(+r.toFixed(6)):"Error";C.a=r};
+  if(/^[0-9.]$/.test(k)){if(C.f||C.d==="Error"){C.d="0";C.f=false}if(k==="."&&C.d.includes("."))return;C.d=(C.d==="0"&&k!==".")?k:C.d+k}
+  else if("+−×÷".includes(k)){if(C.op&&!C.f)comp();else C.a=parseFloat(C.d);C.op=k;C.f=true}
+  else if(k==="="){if(C.op){comp();C.op=null;C.f=true}}
+  else if(k==="C"){C={d:"0",a:null,op:null,f:false}}
+  else if(k==="±"){C.d=C.d.startsWith("-")?C.d.slice(1):(C.d==="0"?"0":"-"+C.d)}
+  else if(k==="Use"){const inp=$("gi")||$("na");if(inp&&!inp.disabled){inp.value=C.d;inp.focus()}}
+  $("cd").textContent=C.d;
+}
+function ask(){
+  const p=P,q=p.qs[p.i],exam=p.kind==="exam";p.ans=false;p.g=null;top();
+  let body;
+  if(q.eo)body='<div class="opts two"><button class="opt" data-k="0"><kbd>1</kbd>Exothermic: gives off heat</button><button class="opt" data-k="1"><kbd>2</kbd>Endothermic: takes in heat</button></div>';
+  else if(q.o)body='<div class="opts">'+q.ord.map((k,j)=>'<button class="opt" data-k="'+k+'"><kbd>'+(j+1)+'</kbd>'+q.o[k]+'</button>').join('')+'</div>';
+  else body='<form class="nr" id="nf"><input id="na" inputmode="decimal" autocomplete="off" aria-label="Your answer"><span class="u">'+q.u+'</span><button class="btn" type="submit">Check</button></form><div id="gd"></div>';
+  const tools=[];
+  if(S.sup.read&&canSpeak)tools.push('<button class="lnk" id="rd" type="button">Read aloud</button>');
+  if(!exam&&q.h)tools.push('<button class="lnk" id="hb" type="button">Hint</button>');
+  if(!exam&&q.s)tools.push('<button class="lnk" id="wt" type="button">Walk me through it</button>');
+  if(!exam&&q.o&&q.ord.length>2)tools.push('<button class="lnk" id="rm" type="button">Remove a wrong answer</button>');
+  if(q.n!==undefined)tools.push('<button class="lnk" id="cb" type="button">'+(calcOn?'Hide':'Show')+' calculator</button>');
+  qw.innerHTML='<div class="qmeta"><span>'+L[q.li].el[0]+' · '+L[q.li].n+'</span><span>'+(p.re[q.id]?'Second try':'')+'</span></div><p class="qtext">'+q.q+'</p><div class="tools">'+tools.join('')+'</div><div id="ht"></div>'+body+(q.n!==undefined&&calcOn?calcHtml():'')+'<div id="fb"></div>';
+  const na=$("na");if(na)na.focus({preventScroll:true});
+}
+function guide(){
+  const p=P,q=p.qs[p.i],g=p.g;
+  const done=q.s.slice(0,g.k).map(s=>'<div class="gs"><span>'+s[0]+'</span><b>'+fmt(s[1])+'</b></div>').join('');
+  const cur=q.s[g.k];
+  $("gd").innerHTML='<div class="guide"><h4>Step by step</h4>'+done+(cur?'<form class="gnow" id="gf"><p>Step '+(g.k+1)+' of '+q.s.length+': '+cur[0]+'</p><div class="nr"><input id="gi" inputmode="decimal" autocomplete="off" aria-label="Step answer"><button class="btn ghost" type="submit">Check step</button></div><div class="gmsg" id="gm">'+(g.msg||'')+'</div></form>':'<p class="gmsg" style="color:var(--ink);font-weight:600">All steps done. Now type your final answer in the box above.</p>')+'</div>';
+  const gi=$("gi");(gi||$("na")).focus({preventScroll:true});
+}
+const num=v=>parseFloat(String(v).replace(/[−–]/g,"-").replace(/[,\s]/g,""));
+function answer(ok,btn){
+  const p=P,q=p.qs[p.i],exam=p.kind==="exam";if(p.ans)return;p.ans=true;day();
+  S.h[q.id]=ok?1:0;S.n++;
+  let gain;if(ok){S.c++;S.combo++;S.best=Math.max(S.best,S.combo);gain=p.re[q.id]?5:p.g?7:10+Math.min(S.combo-1,5)*2}else{S.combo=0;gain=2}
+  addXP(gain);p.res.push({q,ok});save();top();
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const k=+b.dataset.k;if(exam){if(b===btn)b.classList.add("pick")}else if(k===q.a)b.classList.add("ok");else if(b===btn)b.classList.add("no")});
+  const gi=$("gi");if(gi)gi.disabled=true;
+  if(!ok&&!exam&&!p.re[q.id]){p.re[q.id]=1;p.qs.push(prep(q))}
+  if(exam){next();return}
+  const corr=q.o?q.o[q.a]:q.eo?(q.a?'Endothermic':'Exothermic'):fmt(q.n)+' '+q.u;
+  const praise=["Correct","Nice work","Exactly right","Well done"][S.c%4];
+  $("fb").innerHTML='<div class="fb '+(ok?'':'no')+'"><span class="xp">+'+gain+' XP</span><b>'+(ok?praise+(S.combo>=3?' · combo ×'+S.combo:''):'Not this time. The answer is '+corr)+'</b><p>'+q.e+(ok?'':' You still earned XP for trying, and this one comes back at the end so you can get it.')+'</p></div><div class="acts"><button class="btn" id="nx">'+(p.i===p.qs.length-1?'Finish':'Continue')+'</button><span class="tip">or press Enter</span></div>';
+  if(S.sup.read&&canSpeak)say((ok?"Correct. ":"The answer is "+corr+". ")+q.e);
+  $("nx").focus({preventScroll:true});
+}
+function next(){const p=P;if(p.i>=p.qs.length-1)finish();else{p.i++;ask()}}
+function finish(){
+  const p=P,first={};p.res.forEach(r=>{if(!(r.q.id in first))first[r.q.id]=r.ok});
+  const ids=Object.keys(first),right=ids.filter(k=>first[k]).length,pc=ids.length?Math.round(right/ids.length*100):0;
+  $("prog").style.width="100%";clearInterval(tick);p.done=true;
+  let extra='',rew='';
+  if(p.kind==="exam"){const md=medalOf(pc),bonus=md==="Gold"?200:md==="Silver"?100:md==="Bronze"?50:0;if(bonus)addXP(bonus);if(!S.exam||pc>S.exam.p)S.exam={p:pc,t:clock()};
+    if(md)rew='<div class="reward"><svg width="80" height="80" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="36" fill="'+({Gold:"#c9a227",Silver:"#a7adb7",Bronze:"#b07a45"}[md])+'"/><circle cx="40" cy="40" r="28" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/><text x="40" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="#fff" font-family="Schibsted Grotesk,sans-serif">'+pc+'</text></svg><div><b style="font-size:22px">'+md+' medal</b><p style="margin:4px 0 0">+'+bonus+' bonus XP</p></div></div>';
+    const miss=p.res.filter(r=>!r.ok);
+    extra='<div class="review">'+(miss.length?miss.map(r=>{const q=r.q,c=q.o?q.o[q.a]:q.eo?(q.a?'Endothermic':'Exothermic'):fmt(q.n)+' '+q.u;return'<div class="rv"><span style="font-size:13px;color:var(--mute)">'+L[q.li].n+'</span><p>'+q.q+'</p><p class="a"><b style="color:var(--ink)">'+c+'.</b> '+q.e+'</p></div>'}).join(''):'<div class="rv"><p>No misses. Every objective held up under exam conditions.</p></div>')+'</div>';}
+  else{const won=L.map((_,i)=>i).filter(i=>p.before[i]<.7&&mast(i)>=.7),gold=L.map((_,i)=>i).filter(i=>p.before[i]<1&&mast(i)>=1);
+    const show=[...new Set(won.concat(gold))];
+    if(show.length)rew=show.map(i=>'<div class="reward">'+tileHtml(i)+'<div><b style="font-size:22px">'+(mast(i)>=1?'Gold '+L[i].el[2]+'!':L[i].el[2]+' collected!')+'</b><p style="margin:4px 0 0">'+(mast(i)>=1?L[i].n+' is fully mastered.':'You reached 70% on '+L[i].n+'. Hit 100% to turn it gold.')+'</p></div></div>').join('');
+    if(show.length)toast(show.length>1?"New elements collected":"New element: "+L[show[0]].el[2]);}
+  save();
+  const msg=p.kind==="exam"?(pc>=95?"Gold-level performance.":pc>=70?"Medal earned. Review the misses below, then go for the next medal.":"Not a medal yet. Work your weakest objectives, then retake it; your best score is what counts."):(pc===100?"Perfect set.":"You finished the set, including every retry. Replay it any time to raise your first-try score.");
+  qw.innerHTML='<div class="qmeta"><span>'+p.title+' complete</span><span>'+(p.kind==="exam"&&!S.sup.notime?'Time '+clock():'')+'</span></div><div class="score">'+pc+'%</div><p class="qtext" style="margin-top:14px">'+right+' of '+ids.length+' right on the first try · +'+p.xp+' XP earned. '+msg+'</p>'+rew+'<div class="acts"><button class="btn" id="done">Back to overview</button>'+(p.kind==="exam"?'<button class="btn ghost" id="again">Retake exam</button>':'')+'</div>'+extra;
+  $("ovt").textContent=p.title+" · complete";$("ovc").textContent="";
+  const b=$("done");b&&b.focus({preventScroll:true});
+}
+function exam(){open("exam","Final exam",shuffle(ALL).slice(0,12))}
+function vocab(){P=null;VD={o:shuffle(V.map((_,i)=>i)).sort((a,b)=>(S.v[a]===1)-(S.v[b]===1)),i:0,show:false,k:0};lock();$("ovxp").textContent="";$("ovc").textContent="";vshow()}
+function vshow(){
+  const i=VD.o[VD.i],v=V[i];$("ovt").textContent="Recall drill · "+(VD.i+1)+" of 16";$("prog").style.width=(VD.i/16*100)+"%";
+  qw.innerHTML='<div class="qmeta"><span>Say what this means</span><span>'+(S.v[i]===1?'You knew this last time':'')+'</span></div><div class="term">'+v[0]+'</div>'+(S.sup.read&&canSpeak?'<div class="tools"><button class="lnk" id="vrd" type="button">Read aloud</button></div>':'')+(VD.show?'<div class="plain"><b>In plain words:</b> '+v[2]+'</div><div class="defn">'+v[1]+'</div><div class="acts"><button class="btn" id="vk">I knew it</button><button class="btn ghost" id="vr">Review again</button><span class="tip">Keys 1 and 2</span></div>':'<div class="acts"><button class="btn" id="vs">Reveal</button><span class="tip">or press Space</span></div>');
+  const b=$("vs")||$("vk");b&&b.focus({preventScroll:true});
+}
+function vmark(k){const i=VD.o[VD.i];S.v[i]=k;day();addXP(k?3:1);if(k)VD.k++;save();
+  if(VD.i>=15){$("prog").style.width="100%";VD.done=true;qw.innerHTML='<div class="score">'+VD.k+'/16</div><p class="qtext" style="margin-top:14px">terms recalled this round. '+(VD.k===16?'Full recall.':'The ones you marked come first next time.')+'</p><div class="acts"><button class="btn" id="done">Back to overview</button><button class="btn ghost" id="vagain">Run again</button></div>'}
+  else{VD.i++;VD.show=false;vshow()}}
+/* events */
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;rx=+b.dataset.i;tabs();work();diagram()});
+$("cat").addEventListener("change",diagram);
+const startSet=i=>open("set",L[i].n,shuffle(ALL.filter(q=>q.li===i)));
+$("ledger").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(b)startSet(+b.dataset.p)});
+$("tiles").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b)startSet(+b.dataset.t)});
+$("mExam").addEventListener("click",exam);
+$("mWeak").addEventListener("click",()=>{const w=ALL.filter(q=>S.h[q.id]===0);if(w.length)open("weak","Weak spots",shuffle(w))});
+$("mVocab").addEventListener("click",vocab);
+$("close").addEventListener("click",shut);
+qw.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.id==="done"){shut();return}
+  if(t.id==="again"){exam();return}
+  if(t.id==="vagain"){vocab();return}
+  if(VD){const v=V[VD.o[VD.i]];if(t.id==="vs"){VD.show=true;vshow()}else if(t.id==="vk")vmark(1);else if(t.id==="vr")vmark(0);else if(t.id==="vrd")say(v[0]+(VD.show?". In plain words: "+v[2]+". "+v[1]:""));return}
+  if(!P)return;const q=P.qs[P.i];
+  if(t.dataset.c){cpress(t.dataset.c);return}
+  if(t.id==="nx"){next();return}
+  if(t.id==="rd"){say(q.q+(q.o?". "+q.ord.map((k,j)=>"Choice "+(j+1)+": "+q.o[k]).join(". "):q.eo?". Choice 1: exothermic. Choice 2: endothermic.":""));return}
+  if(t.id==="hb"){$("ht").innerHTML='<div class="hintx">'+q.h+'</div>';return}
+  if(t.id==="cb"){calcOn=!calcOn;const ex=$("calc");if(calcOn&&!ex)$("fb").insertAdjacentHTML("beforebegin",calcHtml());else if(!calcOn&&ex)ex.remove();t.textContent=(calcOn?'Hide':'Show')+' calculator';return}
+  if(t.id==="wt"){if(!P.g&&!P.ans){P.g={k:0,tries:0};guide()}t.remove();return}
+  if(t.id==="rm"){const wrong=[...qw.querySelectorAll(".opt:not(.gone):not(:disabled)")].filter(b=>+b.dataset.k!==q.a);if(wrong.length>1){const b=wrong[Math.floor(Math.random()*wrong.length)];b.classList.add("gone");b.disabled=true}if(wrong.length<=2)t.remove();return}
+  if(t.classList.contains("opt")&&!P.ans)answer(+t.dataset.k===q.a,t);
+});
+qw.addEventListener("submit",e=>{
+  e.preventDefault();if(!P||P.ans)return;const q=P.qs[P.i];
+  if(e.target.id==="gf"){const g=P.g,st=q.s[g.k],v=num($("gi").value);if(isNaN(v)){$("gi").focus();return}
+    if(Math.abs(v-st[1])<=(Math.abs(st[1])<1?.005:.5)){g.k++;g.tries=0;g.msg="";addXP(1);top()}else{g.tries++;if(g.tries>=2){g.msg="That step is "+fmt(st[1])+". Here it is filled in so you can keep going.";g.k++;g.tries=0}else{g.msg=st[1]<0&&v>0?"Close. Check the sign: should it be negative?":"Not yet. Try that step once more"+(calcOn?".":" (the calculator can help).")}}
+    guide();return}
+  const v=num($("na").value);if(isNaN(v)){$("na").focus();return}
+  $("na").disabled=true;answer(Math.abs(v-q.n)<=(q.t??1));
+});
+document.addEventListener("keydown",e=>{
+  if(!ov.classList.contains("on"))return;
+  if(e.key==="Escape"){shut();return}
+  if(e.target.tagName==="INPUT")return;
+  if(VD&&!VD.done){if(!VD.show&&e.key===" "){e.preventDefault();VD.show=true;vshow()}else if(VD.show&&e.key==="1")vmark(1);else if(VD.show&&e.key==="2")vmark(0);return}
+  if(!P||P.done)return;
+  if(!P.ans&&/^[1-4]$/.test(e.key)){const b=qw.querySelectorAll(".opt")[+e.key-1];if(b&&!b.disabled)b.click()}
+  else if(P.ans&&e.key==="Enter"&&document.activeElement.id!=="nx"){e.preventDefault();next()}
+});
+function boot(d){if(d&&d.h)S=Object.assign(S,d);S.sup=S.sup||{};applySup();supBar();tabs();work();nl();refresh();diagram()}
+window.claude?.hot?.snapshot?.(()=>S);
+window.claude?.hot?.ready?window.claude.hot.ready(boot):boot(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
