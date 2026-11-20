@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy in Reactions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE a refined study game: calm, precise, rewarding, never punishing
+   IDEA a periodic table you earn, beside a real reference periodic table that is always one tap away
+   PICTURE nine collectible element tiles at the top; the full 118-element table as the reference centrepiece below
+   COLOUR white ground, near-black ink, cobalt = energy absorbed, vermilion = energy released, gold for mastery, quiet category tints
+   TYPE Schibsted Grotesk for structure, Source Serif 4 for questions; Atkinson Hyperlegible when easy-read is on
+   LAYOUT supports bar, title with player card, tiles, toolkit, explorer, periodic table, objectives, challenges; focus mode and table as overlays */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0e1013);--ink:light-dark(#111318,#eceef2);--mute:light-dark(#555a65,#a0a6b1);--rule:light-dark(#dfe1e6,#2a2e36);--soft:light-dark(#f5f6f8,#16191e);--in:light-dark(#1f56d6,#6a97ff);--out:light-dark(#cf3c1b,#ff6d4a);--ok:light-dark(#0d7a49,#3cc985);--gold:light-dark(#a8820f,#e0b84a);--goldbg:light-dark(#fbf5e2,#2a2416)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Schibsted Grotesk",system-ui,sans-serif;overflow-x:clip}
+.big body{zoom:1.18}
+.easy body,.easy .serif,.easy .qtext,.easy .fb p,.easy .defn,.easy .eqn,.easy .rv p,.easy button,.easy input,.easy select{font-family:"Atkinson Hyperlegible",Verdana,sans-serif!important;letter-spacing:.01em}
+.easy body{line-height:1.75}
+.calm *{animation:none!important;transition:none!important}
+.band{padding-block:clamp(26px,4vw,52px);padding-left:max(5vw,16px);padding-right:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2,h3{margin:0;line-height:1.08;letter-spacing:-.02em;font-weight:700}
+.serif{font-family:"Source Serif 4",Georgia,serif}
+.scroll{overflow-x:auto}
+.sup{border-bottom:1px solid var(--rule);padding-block:10px;background:var(--soft)}
+.sup .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.sup b{font-size:14px;margin-right:4px}
+.tg{font:600 14px "Schibsted Grotesk",sans-serif;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tg::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid var(--mute)}
+.tg[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.tg[aria-pressed=true]::before{border-color:var(--bg);background:var(--bg);box-shadow:inset 0 0 0 3px var(--ink)}
+.head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:32px;align-items:center}
+.head h1{font-size:clamp(34px,5vw,52px);text-wrap:balance}
+.head p{margin:12px 0 0;color:var(--mute);max-width:56ch}
+.player{border:1px solid var(--rule);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.medal{width:72px;height:72px}
+.player h3{font-size:22px}
+.player small{color:var(--mute);font-size:14px}
+.xpbar{height:10px;border-radius:6px;background:var(--rule);margin:8px 0 4px;overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--in),var(--out));border-radius:6px;transition:width .5s ease}
+.pf{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--rule);padding-top:12px}
+.pf b{display:block;font-size:22px;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pf span{font-size:13px;color:var(--mute)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin:44px 0 16px}
+.sec h2{font-size:clamp(24px,3vw,30px)}
+.sec p{margin:0;color:var(--mute);font-size:15px;max-width:62ch}
+.tiles{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;margin-top:30px}
+.tile{aspect-ratio:1/1.12;border:1.5px dashed var(--rule);border-radius:10px;background:var(--bg);color:var(--mute);padding:8px 10px;display:flex;flex-direction:column;text-align:left;cursor:pointer;font:inherit}
+.tile .z{font-size:13px;font-weight:600}
+.tile .sy{font-size:clamp(26px,3.2vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1;margin:auto 0 2px}
+.tile .nm{font-size:13px}
+.tile .tm{height:4px;border-radius:2px;background:var(--rule);margin-top:6px;overflow:hidden}
+.tile .tm i{display:block;height:100%;background:var(--ink)}
+.tile.won{border:1.5px solid var(--ink);color:var(--ink)}
+.tile.gold{border:2px solid var(--gold);background:var(--goldbg);color:var(--ink)}
+.tile.gold .sy{color:var(--gold)}
+.tile.gold .tm i{background:var(--gold)}
+.tile:hover{border-color:var(--ink)}
+.tcap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:14px;color:var(--mute)}
+.kit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.kc{border:1px solid var(--rule);border-radius:12px;padding:20px}
+.kc h3{font-size:19px;margin-bottom:10px}
+.kc ol{margin:0;padding-left:1.3em}
+.kc li{margin:4px 0}
+.kc p{margin:8px 0 0}
+.trick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.trick div{border-radius:10px;padding:10px 12px;color:#fff;font-weight:600;font-size:15px}
+.nl label{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-top:8px}
+.nl input[type=range]{width:100%;accent-color:var(--ink);height:28px}
+.line{position:relative;height:34px;margin:14px 0 4px;border-bottom:2px solid var(--ink)}
+.line .z0{position:absolute;left:50%;bottom:-8px;width:2px;height:16px;background:var(--ink)}
+.line .bar{position:absolute;bottom:4px;height:14px;border-radius:3px}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.nlr{font-size:20px;font-weight:700;margin-top:8px}
+.be{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.be table td{padding:5px 0}
+.ex{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:28px;align-items:stretch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{font:600 15px "Schibsted Grotesk",sans-serif;min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fig{position:relative;height:clamp(320px,36vw,420px);border:1px solid var(--rule);border-radius:12px;background:var(--soft)}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font-family:"Schibsted Grotesk",sans-serif;paint-order:stroke;stroke:var(--soft);stroke-width:4px}
+.tog{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:15px;color:var(--mute)}
+.tog input{width:20px;height:20px;accent-color:var(--ink)}
+.work{border:1px solid var(--rule);border-radius:12px;padding:20px;display:flex;flex-direction:column}
+.work h3{font-size:20px}
+.eqn{font-family:"Source Serif 4",serif;font-size:19px;margin:6px 0 14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+td,th{padding:6px 0;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:13px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub td{font-weight:700;border-bottom:2px solid var(--ink)}
+.res{margin-top:auto;padding-top:16px}
+.res b{display:block;font-size:clamp(30px,3.4vw,40px);letter-spacing:-.02em;white-space:nowrap}
+.chip{display:inline-block;font-size:14px;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+/* periodic table */
+.ptbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.ptbar input{font:500 16px "Schibsted Grotesk",sans-serif;padding:10px 14px;border:1px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--ink);width:min(100%,360px)}
+.ptsrc{font-size:13px;color:var(--mute)}
+.ptlay{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.pt{display:grid;grid-template-columns:repeat(18,minmax(38px,1fr));gap:3px;min-width:740px}
+.pt .gno{font-size:13px;color:var(--mute);text-align:center;align-self:end;font-family:"Schibsted Grotesk",sans-serif}
+.swipe{display:none;font-size:13px;color:var(--mute);margin:0 0 6px}
+@media(max-width:800px){.swipe{display:block}}
+.el{position:relative;aspect-ratio:1/1.05;border:0;border-radius:5px;padding:3px 4px;text-align:left;cursor:pointer;color:var(--ink);font:inherit;display:flex;flex-direction:column;justify-content:space-between;background:color-mix(in srgb,var(--c) 22%,var(--bg))}
+.el .ez{font-size:13px;line-height:1;opacity:.8}
+.el .es{font-size:18px;font-weight:700;line-height:1}
+.el:hover{outline:2px solid var(--c)}
+.el.sel{outline:2px solid var(--ink);outline-offset:1px}
+.el.dim{opacity:.18}
+.ph{font-size:13px;color:var(--mute);display:grid;place-items:center;border:1px dashed var(--rule);border-radius:5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:13px}
+.legend button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:4px 0;color:var(--ink);font:inherit;cursor:pointer;min-height:32px}
+.legend i{width:14px;height:14px;border-radius:3px;background:color-mix(in srgb,var(--c) 60%,var(--bg))}
+.legend button[aria-pressed=true]{font-weight:700;text-decoration:underline}
+.ptd{border:1px solid var(--rule);border-radius:12px;padding:16px;position:sticky;top:12px}
+.ptd .big{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin-bottom:10px}
+.ptd .bt{width:84px;height:90px;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;background:color-mix(in srgb,var(--c) 30%,var(--bg))}
+.ptd .bt b{font-size:34px;line-height:1}
+.ptd h3{font-size:24px}
+.ptd table{font-size:14px}
+.ptd td:first-child{color:var(--mute);padding-right:10px;width:46%}
+.cmp{margin-top:12px;padding-top:12px;border-top:2px solid var(--ink)}
+.cmp label{font-weight:600;font-size:14px}
+.cmp select{font:500 16px "Schibsted Grotesk",sans-serif;padding:8px 10px;border-radius:8px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);margin-left:6px}
+.cmp p{margin:8px 0 0;font-size:15px}
+.ledger{border-top:2px solid var(--ink)}
+.row{display:grid;grid-template-columns:52px minmax(0,1.6fr) minmax(0,1.3fr) 110px 124px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule)}
+.mini{width:48px;height:48px;border:1.5px dashed var(--rule);border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:20px;color:var(--mute)}
+.mini.won{border:1.5px solid var(--ink);color:var(--ink)}
+.mini.gold{border:2px solid var(--gold);background:var(--goldbg);color:var(--gold)}
+.row h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.row small{display:block;color:var(--mute);font-size:14px;margin-top:2px}
+.meter{height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink);border-radius:4px}
+.lvl{font-size:14px;font-weight:600;white-space:nowrap}
+.btn{font:600 16px "Schibsted Grotesk",sans-serif;min-height:46px;padding:10px 18px;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--in);outline-offset:2px}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.mode{border:1px solid var(--rule);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px}
+.mode h3{font-size:21px}
+.mode p{margin:0;color:var(--mute);font-size:15px;flex:1}
+.mode .k{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.foot{color:var(--mute);font-size:14px;border-top:1px solid var(--rule);padding-bottom:96px}
+.ov,.ptov{position:fixed;inset:0;background:var(--bg);overflow:auto;display:none}
+.ov{z-index:10}.ptov{z-index:40}
+.ov.on,.ptov.on{display:block}
+.ovtop{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--rule);padding:10px max(5vw,16px);display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:1;flex-wrap:wrap}
+.ovtop .l{font-size:14px;color:var(--mute)}
+.ovtop .r{display:flex;gap:14px;align-items:center;font-size:14px;font-weight:700}
+.prog{position:absolute;left:0;bottom:-1px;height:3px;background:var(--ink);transition:width .35s ease}
+.combo{color:var(--out)}
+.qwrap{max-width:820px;margin:0 auto;padding:clamp(24px,5vh,60px) max(5vw,16px) 110px}
+.qmeta{font-size:14px;color:var(--mute);margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.qtext{font-family:"Source Serif 4",serif;font-size:clamp(22px,2.6vw,28px);line-height:1.32;margin:0 0 24px;font-weight:500;text-wrap:pretty}
+.tools{display:flex;flex-wrap:wrap;gap:6px 18px;margin:-8px 0 18px}
+.lnk{background:none;border:0;padding:0;color:var(--in);font:600 15px "Schibsted Grotesk",sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:44px}
+.opts{display:grid;gap:10px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:center;text-align:left;min-height:58px;padding:12px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink);font:500 17px "Schibsted Grotesk",sans-serif;cursor:pointer}
+.opt kbd{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--rule);border-radius:6px;font:600 13px "Schibsted Grotesk",sans-serif;color:var(--mute)}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.gone{opacity:.35;text-decoration:line-through}
+.opt.ok{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.opt.ok kbd{background:var(--ok);color:#fff;border-color:var(--ok)}
+.opt.no{border-color:var(--out);box-shadow:inset 0 0 0 1px var(--out)}
+.opt.no kbd{background:var(--out);color:#fff;border-color:var(--out)}
+.opt.pick{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.nr{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.nr input{font:600 20px "Schibsted Grotesk",sans-serif;width:10em;padding:12px 14px;border:1px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.nr .u{font-weight:600;color:var(--mute)}
+.guide{margin-top:20px;border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.ghd{padding:14px 18px;background:var(--soft);border-bottom:1px solid var(--rule)}
+.ghd h4{margin:0;font-size:16px}
+.ghd p{margin:4px 0 0;font-size:15px;color:var(--mute)}
+.plan{list-style:none;margin:0;padding:8px 18px;border-bottom:1px solid var(--rule)}
+.plan li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;font-size:15px;color:var(--mute)}
+.plan li .d{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);display:grid;place-items:center;font-size:12px;font-weight:700}
+.plan li.done{color:var(--ink)}
+.plan li.done .d{background:var(--ok);border-color:var(--ok);color:#fff}
+.plan li.now{color:var(--ink);font-weight:700}
+.plan li.now .d{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.plan li b{color:var(--ok);white-space:nowrap;font-variant-numeric:tabular-nums}
+.gcur{padding:16px 18px}
+.gk{font-size:13px;color:var(--mute);font-weight:600}
+.gp{font-size:20px;font-weight:700;margin:4px 0 8px}
+.gh{margin:0 0 12px;font-family:"Source Serif 4",serif;font-size:17px;background:var(--goldbg);border-radius:8px;padding:10px 12px}
+.gmsg{font-size:15px;margin-top:8px}
+.gmsg.no{color:var(--out)}
+.gdone{padding:16px 18px;font-weight:600}
+.calc{margin-top:16px;border:1px solid var(--rule);border-radius:12px;padding:12px;max-width:300px;background:var(--soft)}
+.cd{font:700 26px "Schibsted Grotesk",sans-serif;text-align:right;padding:6px 8px;background:var(--bg);border:1px solid var(--rule);border-radius:8px;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ck{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ck button{min-height:46px;border-radius:8px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);font:600 18px "Schibsted Grotesk",sans-serif;cursor:pointer}
+.ck button.op{background:var(--ink);color:var(--bg)}
+.fb{margin-top:22px;padding:16px 20px;border-left:3px solid var(--ok);background:var(--soft);border-radius:0 10px 10px 0;animation:rise .3s ease-out}
+.fb.no{border-color:var(--out)}
+.fb b{font-size:16px}
+.fb .xp{float:right;color:var(--gold);font-weight:700}
+.fb p{font-family:"Source Serif 4",serif;font-size:17px;margin:6px 0 0}
+@keyframes rise{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center}
+.tip{font-size:13px;color:var(--mute)}
+.hintx{margin-top:8px;font-family:"Source Serif 4",serif;background:var(--goldbg);border-radius:8px;padding:8px 12px}
+.score{font-size:clamp(64px,10vw,96px);font-weight:700;letter-spacing:-.04em;line-height:1}
+.reward{display:flex;gap:18px;align-items:center;margin:22px 0;padding:16px;border:1px solid var(--rule);border-radius:14px}
+.reward .tile{width:96px;flex:none;cursor:default;animation:rise .5s ease-out}
+.review{margin-top:28px;border-top:2px solid var(--ink)}
+.rv{padding:14px 0;border-bottom:1px solid var(--rule)}
+.rv p{margin:4px 0 0;font-family:"Source Serif 4",serif}
+.rv .a{color:var(--mute);font-size:15px}
+.term{font-size:clamp(36px,6vw,56px);font-weight:700;letter-spacing:-.03em;margin:8px 0 20px}
+.defn{font-family:"Source Serif 4",serif;font-size:22px;line-height:1.4;padding:18px 0 10px;border-top:1px solid var(--rule)}
+.plain{font-size:18px;padding:12px 14px;border-radius:10px;background:var(--goldbg);margin-bottom:8px}
+.fab{position:fixed;right:16px;bottom:16px;z-index:25;display:flex;align-items:center;gap:8px;font:700 15px "Schibsted Grotesk",sans-serif;min-height:48px;padding:10px 16px;border-radius:99px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.fab svg{width:20px;height:16px}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:700;z-index:30;display:none;max-width:calc(100% - 32px)}
+.toast.on{display:block;animation:rise .3s ease-out}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:1100px){.ptlay{grid-template-columns:1fr}.ptd{position:static}}
+@media(max-width:900px){.head,.ex{grid-template-columns:1fr}.kit,.modes{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(5,minmax(0,1fr))}.row{grid-template-columns:52px minmax(0,1fr) 124px;row-gap:8px}.row .m{grid-column:2/4}.row .lvl{display:none}.row .btn{grid-row:1;grid-column:3}}
+@media(max-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.pf{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px}.opts.two{grid-template-columns:1fr}.row{grid-template-columns:52px minmax(0,1fr)}.row .m{grid-column:1/3}.row .btn{grid-row:auto;grid-column:1/3}.reward{flex-direction:column;align-items:flex-start}.be{grid-template-columns:1fr}.fab span{display:none}}
+</style>
+</head>
+<body>
+<div class="sup"><div class="wrap" id="sup" role="group" aria-label="Learning supports"><b>Learning supports</b></div></div>
+
+<main class="band" style="padding-top:30px"><div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Energy in Chemical Reactions</h1>
+      <p>Unit 2 study game. Earn XP on every question, climb the lab ranks, and master each objective to collect its element.</p>
+    </div>
+    <div class="player" id="player"></div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+  <div class="tcap"><span>Collect an element at 70% mastery. It turns gold at 100%.</span><span id="tcount"></span></div>
+
+  <div class="sec"><h2>Math toolkit</h2><p>Every calculation in this unit uses the same few moves. Keep these handy while you practice.</p></div>
+  <div class="kit">
+    <div class="kc"><h3>ΔH from bond energies, in five moves</h3><ol><li>Write out each molecule and count every bond. The big number in front of a formula is how many molecules there are.</li><li>For each bond type, multiply count × bond energy.</li><li>Add the reactant bonds. That total is <b style="color:var(--in)">energy in</b> (breaking bonds takes energy).</li><li>Add the product bonds. That total is <b style="color:var(--out)">energy out</b> (forming bonds gives energy off).</li><li>ΔH = energy in − energy out. Negative means exothermic; positive means endothermic.</li></ol><p class="serif">Example: 3H₂ has 3 H–H bonds. 3 × 436 = 1,308 kJ.</p></div>
+    <div class="kc"><h3>Positive or negative?</h3><div class="nl"><label for="sIn"><span style="color:var(--in)">Energy in</span><span id="vIn"></span></label><input type="range" id="sIn" min="0" max="3500" step="1" value="2253"><label for="sOut"><span style="color:var(--out)">Energy out</span><span id="vOut"></span></label><input type="range" id="sOut" min="0" max="3500" step="1" value="2346"><div class="line"><span class="z0"></span><span class="bar" id="nlb"></span></div><div class="ends"><span>Negative</span><span>0</span><span>Positive</span></div><div class="nlr" id="nlr" aria-live="polite"></div></div><div class="trick"><div style="background:var(--out)">EXOthermic: heat EXits. ΔH is negative.</div><div style="background:var(--in)">ENDOthermic: heat ENters. ΔH is positive.</div></div></div>
+    <div class="kc"><h3>Heat: q = mcΔT</h3><table><tbody><tr><td><b>q</b></td><td>heat energy, in joules (J)</td></tr><tr><td><b>m</b></td><td>mass, in grams (g)</td></tr><tr><td><b>c</b></td><td>specific heat, in J/g·°C. Water 4.18, aluminum 0.897, iron 0.449</td></tr><tr><td><b>ΔT</b></td><td>final temperature − starting temperature</td></tr></tbody></table><p class="serif">100 g of water warms from 22 °C to 30 °C. ΔT = 8. q = 100 × 4.18 × 8 = 3,344 J.</p><p class="serif" style="color:var(--mute)">Smaller minus bigger is always negative: 300 − 500 = −200.</p></div>
+    <div class="kc"><h3>Average bond energies (kJ/mol)</h3><div class="be" id="betab"></div><p style="font-size:14px;color:var(--mute)">Published averages. Tables in other books can differ by a few kJ, so always use the values a question gives you.</p></div>
+  </div>
+
+  <div class="sec"><h2>Reaction explorer</h2><p>Pick a reaction. Bonds broken take energy in; bonds formed give energy out. The diagram is drawn to scale.</p></div>
+  <div class="ex">
+    <div>
+      <div class="tabs" id="tabs" role="group" aria-label="Choose a reaction"></div>
+      <div class="fig"><svg id="dg" role="img" aria-label="Energy diagram of the selected reaction"></svg></div>
+      <label class="tog"><input type="checkbox" id="cat"> Show a catalyzed pathway (a lower hill, same ΔH)</label>
+    </div>
+    <div class="work" id="work"></div>
+  </div>
+
+  <div class="sec"><h2>Periodic table</h2><p>All 118 elements. Tap one for its data, or compare two elements to predict the bond they form. Also always open from the button in the corner.</p></div>
+  <div id="ptMain"></div>
+
+  <div class="sec"><h2>Objectives</h2><p>Mastery counts your latest answer to each question. Missed questions come back at the end of a set, so every set ends in a win.</p></div>
+  <div class="ledger" id="ledger"></div>
+
+  <div class="sec"><h2>Challenges</h2></div>
+  <div class="modes">
+    <div class="mode"><h3>Final exam</h3><span class="k" id="kExam"></span><p>12 questions from every objective. Earn bronze at 70%, silver at 85% and gold at 95%.</p><button class="btn" id="mExam">Start exam</button></div>
+    <div class="mode"><h3>Weak spots</h3><span class="k" id="kWeak">0</span><p>Only the questions you missed most recently. Clear them all to bring this to zero.</p><button class="btn ghost" id="mWeak">Review weak spots</button></div>
+    <div class="mode"><h3>Recall drill</h3><span class="k" id="kVocab">0/20</span><p>Twenty key terms, each with a plain-words version. Say it first, then reveal.</p><button class="btn ghost" id="mVocab">Start drill</button></div>
+  </div>
+</div></main>
+
+<footer class="band foot"><div class="wrap">All questions, examples and definitions are original. Bond energies are standard published averages. Element data: PubChem, National Library of Medicine (public domain), with a built-in copy for offline use. You earn XP for every attempt, and more for first-try answers and combos. Progress saves in this browser.</div></footer>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-label="Practice">
+  <div class="ovtop"><span class="l" id="ovt"></span><span class="r"><span id="ovxp" style="color:var(--gold)"></span><span id="ovc" class="combo"></span><button class="btn ghost" id="close">Exit</button></span><i class="prog" id="prog"></i></div>
+  <div class="qwrap" id="qw" aria-live="polite"></div>
+</div>
+<div class="ptov" id="ptov" role="dialog" aria-modal="true" aria-label="Periodic table">
+  <div class="ovtop"><span style="font-size:18px;font-weight:700">Periodic table</span><button class="btn ghost" id="ptclose">Close</button></div>
+  <div class="band" style="padding-top:20px"><div class="wrap" id="ptDlg"></div></div>
+</div>
+<button class="fab" id="fab" aria-label="Open the periodic table"><svg viewBox="0 0 20 16" aria-hidden="true"><g fill="currentColor"><rect x="0" y="0" width="4" height="4" rx="1"/><rect x="16" y="0" width="4" height="4" rx="1"/><rect x="0" y="6" width="4" height="4" rx="1"/><rect x="5" y="6" width="4" height="4" rx="1"/><rect x="11" y="6" width="4" height="4" rx="1"/><rect x="16" y="6" width="4" height="4" rx="1"/><rect x="0" y="12" width="20" height="4" rx="1"/></g></svg><span>Periodic table</span></button>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+/* ---------- content (original) ---------- */
+const L=[
+{n:"Math skills",el:["H",1,"Hydrogen"],o:"Practice the multiplying, adding and negative-number subtraction used in every energy calculation.",q:[
+{q:"Multiply: 6 × 463",n:2778,u:"",t:0,h:"Split 463 into 400 + 63 and multiply each part.",s:[["Split the number","Break 463 into 400 + 63. First, 6 × 400 =",2400,"Multiplying by a round number is easier: 6 × 4 = 24, then add two zeros."],["Multiply the rest","6 × 63 =",378,"6 × 60 = 360 and 6 × 3 = 18. Then 360 + 18 = 378."],["Add the parts","2,400 + 378 =",2778,"Put the two pieces back together."]],e:"6 × 463 = 2,778. In this unit that's six O–H bonds."},
+{q:"Add: 945 + 1,308",n:2253,u:"",t:0,h:"Add 1,300 first, then the 8.",s:[["Add the big part","945 + 1,300 =",2245,"Add the round part of the second number first."],["Add what's left","2,245 + 8 =",2253,"1,308 is 1,300 + 8, so add the 8 last."]],e:"945 + 1,308 = 2,253."},
+{q:"Subtract: 2,346 − 2,253",n:93,u:"",t:0,h:"Take away 2,200 first, then 53.",s:[["Take away the round part","2,346 − 2,200 =",146,"2,253 is 2,200 + 53. Subtract the round 2,200 first."],["Take away the rest","146 − 53 =",93,"Now take away the 53 that's left."]],e:"2,346 − 2,253 = 93."},
+{q:"Subtract: 2,253 − 2,346. Watch out: the second number is bigger.",n:-93,u:"",t:0,h:"Do bigger minus smaller, then put a minus sign in front.",s:[["Spot the bigger number","Which is bigger, 2,253 or 2,346? Type it.",2346,"Look at the hundreds place: 3 hundreds beats 2 hundreds."],["Subtract bigger minus smaller","2,346 − 2,253 =",93,"Always subtract the smaller number from the bigger one first."],["Choose the sign","You started with the smaller number, so the answer is negative. Type it with a minus sign.",-93,"Smaller minus bigger is always negative. Type − or - before the number."]],e:"2,253 − 2,346 = −93. Smaller minus bigger is always negative."},
+{q:"What is 300 − 500?",o:["−200","200","800","0"],a:0,e:"You took away more than you had, so you went below zero: −200. In this unit, a negative ΔH means energy was released."},
+{q:"ΔH = −93 kJ. The minus sign tells you the reaction is",eo:1,a:0,e:"Negative means more energy came out than went in. Heat EXits: EXOthermic."},
+{q:"The symbol Δ (delta) means",o:["change in","total","average","divided by"],a:0,e:"ΔT is the change in temperature, ΔH is the change in enthalpy."},
+{q:"Water warms from 18 °C to 25 °C. What is ΔT?",n:7,u:"°C",t:0,h:"Final minus starting.",s:[["Find ΔT","Final temperature − starting temperature: 25 − 18 =",7,"ΔT is always final minus starting. If it comes out negative, the sample cooled down."]],e:"ΔT = 25 − 18 = 7 °C."},
+{q:"Multiply: 40 × 4.18",n:167.2,u:"",t:.01,h:"Do 40 × 4, then 40 × 0.18, then add.",s:[["Multiply the whole number","40 × 4 =",160,"Ignore the decimal part for now."],["Multiply the decimal part","40 × 0.18 =",7.2,"18 × 4 = 72. 0.18 × 40 has one decimal place, so 7.2."],["Add the parts","160 + 7.2 =",167.2,"4.18 is 4 + 0.18, so add both answers."]],e:"40 × 4.18 = 167.2. That's the heat in joules to warm 40 g of water by 1 °C."}]},
+{n:"Bond energy and ΔH",el:["C",6,"Carbon"],o:"Calculate ΔH from bond energies and use its sign to tell exothermic from endothermic.",q:[
+{q:"Using bond energies, ΔH equals",o:["energy to break reactant bonds − energy released forming product bonds","energy released forming product bonds − energy to break reactant bonds","reactant bonds + product bonds","the number of bonds broken"],a:0,e:"Energy in minus energy out. Breaking costs energy; forming gives it back."},
+{q:"A reaction needs 1,200 kJ to break its reactant bonds and releases 1,450 kJ forming its product bonds. What is ΔH?",n:-250,u:"kJ",h:"Energy in − energy out. Energy out is bigger.",s:[["Find energy in","Energy in is the energy to break the reactant bonds. Type it.",1200,"Breaking bonds always takes energy in."],["Bigger minus smaller","1,450 − 1,200 =",250,"Energy out is bigger, so subtract energy in from it."],["Choose the sign","Energy in was smaller than energy out, so ΔH is negative. Final ΔH:",-250,"Smaller − bigger is negative. A negative ΔH means energy was released."]],e:"1,200 − 1,450 = −250 kJ: exothermic."},
+{q:"Breaking the reactant bonds takes 900 kJ. Forming the product bonds releases 640 kJ. What is ΔH?",n:260,u:"kJ",h:"Energy in − energy out.",s:[["Find energy in","Energy to break the reactant bonds:",900,"That's energy in."],["Subtract","900 − 640 =",260,"Energy in is bigger, so the answer is positive."]],e:"900 − 640 = +260 kJ: endothermic."},
+{q:"A reaction has ΔH = +260 kJ. Classify it.",eo:1,a:1,e:"Positive ΔH: more energy went in than came out. Heat ENters: ENDOthermic."},
+{q:"A negative ΔH tells you that the reaction",o:["releases energy to the surroundings","absorbs energy from the surroundings","has no energy change","needs a catalyst"],a:0,e:"The products end up with less energy than the reactants; the difference is given off."},
+{q:"The products of a reaction have more enthalpy than the reactants. ΔH is",o:["positive","negative","zero","impossible to know"],a:0,e:"Going up in energy means energy was absorbed, so ΔH is positive."},
+{q:"Hess's law lets chemists",o:["find ΔH for a reaction by adding up the ΔH of steps that lead to it","measure temperature without a thermometer","make reactions go faster","create energy"],a:0,e:"The total energy change depends only on where you start and finish."},
+{q:"Bond energy tables list average values because",o:["the same bond varies a little from one molecule to another","bonds change every day","scientists disagree about chemistry","all bonds are identical"],a:0,e:"A C–H bond in methane is slightly different from one in ethane, so tables use averages."}]},
+{n:"Systems and surroundings",el:["N",7,"Nitrogen"],o:"Decide what counts as the system and what counts as the surroundings, and which way energy flows.",q:[
+{q:"You bend a glow stick and the chemicals inside mix and glow. What is the system?",o:["The chemicals inside that react","The plastic tube","Your hand","The air in the room"],a:0,e:"The system is the reacting substances. Everything else is the surroundings."},
+{q:"In the glow stick, the plastic tube is part of the",o:["surroundings","system","products","reactants"],a:0,e:"The tube holds the reaction, but it doesn't react, so it's outside the system."},
+{q:"A glow stick gives off light. Classify the reaction.",eo:1,a:0,e:"Light is energy leaving the system, so the reaction is exothermic."},
+{q:"A self-heating can of soup mixes calcium oxide with water to warm the soup. The soup is part of the",o:["surroundings","system","reactants","catalyst"],a:0,e:"Calcium oxide and water react (the system) and heat flows out into the soup."},
+{q:"The self-heating can warms the soup. Classify the reaction.",eo:1,a:0,e:"Energy flows from the system into the surroundings: exothermic."},
+{q:"Sweat evaporating from your skin cools you down. Energy moves",o:["from your skin into the evaporating water","from the water into your skin","nowhere","from the air into your skin"],a:0,e:"The evaporating water takes in heat from your skin, so evaporation is endothermic for the water."},
+{q:"A reaction gives 300 kJ of energy to its surroundings. How much energy does the system lose?",o:["300 kJ","0 kJ","600 kJ","150 kJ"],a:0,e:"Energy is conserved: whatever the surroundings gain, the system loses."},
+{q:"A fuel releases energy when it burns. Where was that energy before the reaction?",o:["Stored in the chemical bonds of the reactants","In the air","Created by the flame","In the container"],a:0,e:"Energy can't be created. It was stored as chemical potential energy."}]},
+{n:"Breaking bonds",el:["O",8,"Oxygen"],o:"Count the bonds that must break and find the energy needed to break them.",q:[
+{q:"Breaking a chemical bond",o:["takes in energy (endothermic)","gives off energy (exothermic)","neither takes nor gives energy","only happens with a catalyst"],a:0,e:"You have to put energy in to pull bonded atoms apart."},
+{q:"How many N–H bonds must break in 2NH₃ → N₂ + 3H₂?",n:6,u:"bonds",t:0,h:"Each NH₃ has three N–H bonds.",s:[["Picture one molecule","How many N–H bonds does one NH₃ have?",3,"NH₃ is one nitrogen with three hydrogens attached. Each hydrogen uses one bond."],["Count the molecules","How many NH₃ molecules are in 2NH₃?",2,"The big number in front of the formula (the coefficient) tells you how many molecules."],["Multiply","2 molecules × 3 bonds each =",6,"Total bonds = number of molecules × bonds in each one."]],e:"2 × 3 = 6 N–H bonds."},
+{q:"An N–H bond is 391 kJ/mol. How much energy does it take to break all the bonds in 2NH₃?",n:2346,u:"kJ",h:"6 bonds × 391.",s:[["Count the bonds","How many N–H bonds are in 2NH₃?",6,"2 molecules × 3 N–H bonds each."],["Round to make it easy","6 × 400 =",2400,"391 is close to 400, which is easier to multiply."],["Fix the rounding","You added 9 extra, six times. 6 × 9 =",54,"400 is 9 more than 391."],["Take back the extra","2,400 − 54 =",2346,"Subtract what you added by rounding."]],e:"6 × 391 = 2,346 kJ."},
+{q:"A C–H bond is 413 kJ/mol. How much energy breaks every bond in one CH₄?",n:1652,u:"kJ",h:"CH₄ has four C–H bonds.",s:[["Count the bonds","How many C–H bonds are in one CH₄?",4,"Carbon in the middle, four hydrogens around it, one bond each."],["Multiply the round part","4 × 400 =",1600,"Split 413 into 400 + 13."],["Multiply the rest","4 × 13 =",52,"4 × 10 = 40 and 4 × 3 = 12."],["Add","1,600 + 52 =",1652,"That's the energy to break every bond in one CH₄."]],e:"4 × 413 = 1,652 kJ."},
+{q:"Which bond takes the most energy to break?",o:["N≡N (945 kJ/mol)","O=O (498 kJ/mol)","H–H (436 kJ/mol)","F–F (159 kJ/mol)"],a:0,e:"The biggest bond energy is the hardest to break. Nitrogen's triple bond is one of the strongest."},
+{q:"F–F has a bond energy of only 159 kJ/mol. This means the F–F bond is",o:["weak and easy to break","strong and hard to break","impossible to break","not a real bond"],a:0,e:"Low bond energy = little energy needed to break it."},
+{q:"When methane burns, CH₄ + 2O₂ → CO₂ + 2H₂O, which bonds break?",o:["C–H bonds in methane and O=O bonds in oxygen","C=O bonds in carbon dioxide","O–H bonds in water","No bonds break"],a:0,e:"Reactant bonds break. CO₂ and H₂O are products, so their bonds form."},
+{q:"You light a campfire with a match. The energy that breaks the first bonds in the wood comes from",o:["the match flame","the wood's products","the air getting colder","nowhere"],a:0,e:"Reactions need a starting push. Once burning, the fire's own heat keeps breaking more bonds."}]},
+{n:"Forming bonds",el:["Na",11,"Sodium"],o:"Count the bonds that form, find the energy released, and predict bond type from electronegativity.",q:[
+{q:"Forming a chemical bond",o:["gives off energy","takes in energy","uses up a catalyst","raises the atoms' energy"],a:0,e:"Bonded atoms are lower in energy and more stable, so energy is released."},
+{q:"An H–F bond is 567 kJ/mol. How much energy is released forming 2HF?",n:1134,u:"kJ",h:"Two HF molecules, one bond each.",s:[["Count the bonds","How many H–F bonds are in 2HF?",2,"Each HF has one H–F bond, and there are 2 molecules."],["Multiply","2 × 567 =",1134,"2 × 500 = 1,000 and 2 × 67 = 134."]],e:"2 × 567 = 1,134 kJ released."},
+{q:"A C=O bond is 799 kJ/mol. How much energy is released forming one CO₂?",n:1598,u:"kJ",h:"CO₂ is O=C=O.",s:[["Picture the molecule","How many C=O double bonds are in one CO₂?",2,"CO₂ is O=C=O: carbon is double-bonded to each oxygen."],["Round to make it easy","2 × 800 =",1600,"799 is almost 800."],["Fix the rounding","1,600 − 2 =",1598,"You added 1 extra, twice."]],e:"2 × 799 = 1,598 kJ released."},
+{q:"Find the electronegativity difference between sodium and chlorine. Use the periodic table.",n:2.23,u:"",t:.02,pt:1,h:"Open the periodic table. Look up Na (11) and Cl (17), then do bigger minus smaller.",s:[["Look up chlorine","Electronegativity of Cl (element 17). Use the periodic table button.",3.16,"Tap Cl in the periodic table and read its electronegativity."],["Look up sodium","Electronegativity of Na (element 11):",.93,"Tap Na in the periodic table."],["Subtract","Bigger minus smaller: 3.16 − 0.93 =",2.23,"An electronegativity difference is always written as a positive number."]],e:"3.16 − 0.93 = 2.23. That's above 1.7, so the bond is ionic."},
+{q:"Na–Cl has an electronegativity difference of 2.23. What kind of bond forms?",o:["Ionic","Nonpolar covalent","Polar covalent","Metallic"],a:0,e:"Rule of thumb: below 0.4 nonpolar covalent, 0.4 to 1.7 polar covalent, above 1.7 ionic."},
+{q:"Two chlorine atoms bond to make Cl₂. Their electronegativity difference is 0. The bond is",o:["nonpolar covalent: electrons shared equally","ionic","polar covalent","metallic"],a:0,e:"Identical atoms pull equally, so they share electrons evenly."},
+{q:"Atoms form bonds because",o:["bonded atoms have lower energy and are more stable","bonds create new energy","atoms want to be heavier","it makes them hotter"],a:0,e:"Like a ball rolling downhill, atoms move toward the lower-energy, more stable arrangement."},
+{q:"Which carbon–carbon bond is the shortest and strongest?",o:["C≡C triple (839 kJ/mol)","C=C double (614 kJ/mol)","C–C single (348 kJ/mol)","They are all the same"],a:0,e:"More shared electron pairs pull the atoms closer and hold them tighter."}]},
+{n:"Energy transfer",el:["Cl",17,"Chlorine"],o:"Tell conduction, convection and radiation apart in everyday situations.",q:[
+{q:"Holding a hot mug of cocoa warms your hands. This is",o:["conduction","convection","radiation","combustion"],a:0,e:"Conduction is heat moving through direct contact."},
+{q:"A hair dryer warms your hair mostly by",o:["convection","conduction","radiation","evaporation"],a:0,e:"Convection is heat carried by moving air or liquid."},
+{q:"Sunlight warms the seats of a parked car through",o:["radiation","conduction","convection","activation"],a:0,e:"Radiation travels as waves, even through the empty space between the Sun and Earth."},
+{q:"Which kind of energy transfer can happen with no matter at all?",o:["Radiation","Conduction","Convection","All of them need matter"],a:0,e:"Conduction and convection need particles; radiation doesn't."},
+{q:"An ice cube melting in a drink takes in heat from the drink. For the ice, melting is",o:["endothermic","exothermic","neither","a chemical reaction"],a:0,e:"The ice absorbs energy from its surroundings (the drink), so the drink gets colder."},
+{q:"A beaker feels warm after a reaction inside it. The system's energy change, ΔE, is",o:["negative","positive","zero","unknown"],a:0,e:"The system lost energy to the beaker and your hand, so ΔE is negative: exothermic."},
+{q:"An egg cooks in a hot frying pan. Heat moves from the pan into the egg by",o:["conduction","radiation","convection","condensation"],a:0,e:"The egg is touching the pan."},
+{q:"Oven mitts are thick and padded because the padding",o:["is a poor conductor, so heat reaches your hand slowly","reflects all radiation","speeds up convection","is a catalyst"],a:0,e:"Materials that conduct heat poorly are called insulators."}]},
+{n:"Potential and kinetic energy",el:["Fe",26,"Iron"],o:"Follow energy as it changes between stored (potential) and motion (kinetic) energy.",q:[
+{q:"A skateboarder waits at the top of a ramp. She has the most",o:["potential energy","kinetic energy","chemical energy","heat"],a:0,e:"Height gives stored (potential) energy."},
+{q:"At the bottom of the ramp, moving fastest, most of her energy is",o:["kinetic energy","potential energy","chemical energy","lost forever"],a:0,e:"Stored energy became energy of motion. Total energy stays the same."},
+{q:"When you heat a gas, its temperature rises because",o:["its particles move faster on average","its particles get bigger","it gains mass","its bonds get stronger"],a:0,e:"Temperature measures the average kinetic energy of the particles."},
+{q:"Ice at 0 °C keeps absorbing heat but stays at 0 °C while it melts. The heat goes into",o:["freeing the particles from each other (potential energy)","making the particles move faster","making the ice colder","nothing"],a:0,e:"During a change of state, energy changes the particles' arrangement, not their speed."},
+{q:"Chemical potential energy is stored in",o:["the bonds between atoms","the container","the temperature","the catalyst"],a:0,e:"Different bonds store different amounts of energy."},
+{q:"Burning methane releases 802 kJ per mole. Which equation shows this correctly?",o:["CH₄ + 2O₂ → CO₂ + 2H₂O + 802 kJ","802 kJ + CH₄ + 2O₂ → CO₂ + 2H₂O","CH₄ + 2O₂ → CO₂ + 2H₂O − 802 kJ","CH₄ → 802 kJ"],a:0,e:"Energy released is written on the product side."},
+{q:"Burning 1 mol of CH₄ releases 802 kJ. How much energy do 3 mol release?",n:2406,u:"kJ",h:"3 times the moles, 3 times the energy.",s:[["Find the energy for 1 mol","How much energy does 1 mol of CH₄ release?",802,"It's given in the question."],["Multiply the round part","3 × 800 =",2400,"Split 802 into 800 + 2."],["Multiply the rest","3 × 2 =",6,""],["Add","2,400 + 6 =",2406,"3 mol releases 3 times the energy of 1 mol."]],e:"3 × 802 = 2,406 kJ."},
+{q:"Splitting water takes in 482 kJ. Where does 482 kJ go in the equation?",o:["With the reactants: 482 kJ + 2H₂O → 2H₂ + O₂","With the products: 2H₂O → 2H₂ + O₂ + 482 kJ","Nowhere","Above the arrow only"],a:0,e:"Energy taken in is written on the reactant side, like an ingredient."}]},
+{n:"Energy diagrams and catalysts",el:["Cu",29,"Copper"],o:"Read energy diagrams and explain how catalysts lower activation energy.",q:[
+{q:"On an energy diagram, the hill between reactants and products shows the",o:["activation energy","ΔH","temperature","products"],a:0,e:"Reactants must get over this hill before the reaction can happen."},
+{q:"An energy diagram shows the products lower than the reactants. Classify the reaction.",eo:1,a:0,e:"The system dropped in energy, so energy was released."},
+{q:"An energy diagram shows the products higher than the reactants. Classify the reaction.",eo:1,a:1,e:"The system rose in energy, so energy was absorbed."},
+{q:"A catalyst speeds up a reaction by",o:["providing a path with a lower activation energy","raising the temperature of the products","being burned as fuel","changing ΔH"],a:0,e:"A lower hill means more collisions have enough energy to react. The catalyst isn't used up."},
+{q:"Adding a catalyst changes ΔH by",o:["nothing: ΔH stays the same","making it more negative","making it more positive","doubling it"],a:0,e:"The start and end are the same; only the path in between is easier."},
+{q:"Enzymes in your body, like the ones that digest food, are",o:["catalysts","reactants","products","fuels"],a:0,e:"Enzymes lower activation energy so reactions happen fast at body temperature."},
+{q:"A car's catalytic converter helps by",o:["speeding up reactions that turn harmful exhaust gases into less harmful ones","adding fuel to the engine","cooling the engine","storing energy"],a:0,e:"It lowers activation energy for those clean-up reactions."},
+{q:"Why don't reactions with a negative ΔH always start on their own?",o:["Particles still need enough energy to get over the activation energy hill","Negative ΔH reactions never happen","They need to be cooled first","They have no activation energy"],a:0,e:"Paper can burn (exothermic), but it doesn't catch fire until something gives it a push."}]},
+{n:"Calculation lab",el:["Au",79,"Gold"],o:"Put it all together with full, multi-step energy calculations.",q:[
+{q:"CH₄ + 2O₂ → CO₂ + 2H₂O. Bond energies (kJ/mol): C–H 413, O=O 498, C=O 799, O–H 463. What is ΔH?",n:-802,u:"kJ",h:"Energy in: 4 C–H + 2 O=O. Energy out: 2 C=O + 4 O–H.",s:[["Count C–H bonds","How many C–H bonds are in one CH₄?",4,"Carbon sits in the middle with four hydrogens, one bond each."],["Break the C–H bonds","4 × 413 =",1652,"Count × bond energy. Try 4 × 400 = 1,600 plus 4 × 13 = 52."],["Break the O=O bonds","There are 2 O₂ molecules, each with one O=O bond. 2 × 498 =",996,"2 × 500 = 1,000, minus 2 × 2 = 4."],["Total energy in","1,652 + 996 =",2648,"Add every bond broken in the reactants. This is energy in."],["Form the C=O bonds","CO₂ is O=C=O, two double bonds. 2 × 799 =",1598,"2 × 800 = 1,600, minus 2."],["Form the O–H bonds","2 H₂O × 2 O–H bonds each = 4 bonds. 4 × 463 =",1852,"4 × 400 = 1,600 plus 4 × 63 = 252."],["Total energy out","1,598 + 1,852 =",3450,"Add every bond formed in the products. This is energy out."],["Bigger minus smaller","3,450 − 2,648 =",802,"Energy out is bigger, so subtract energy in from it."],["Choose the sign","Energy in (2,648) was smaller than energy out (3,450). Final ΔH:",-802,"Smaller − bigger is negative, so ΔH is negative: exothermic."]],e:"2,648 − 3,450 = −802 kJ: exothermic. That's why natural gas is a good fuel."},
+{q:"N₂ + 3H₂ → 2NH₃ (making ammonia). Bond energies (kJ/mol): N≡N 945, H–H 436, N–H 391. What is ΔH?",n:-93,u:"kJ",h:"Energy in: 1 N≡N + 3 H–H. Energy out: 6 N–H.",s:[["Break N≡N","N₂ has one N≡N triple bond. Energy to break it:",945,"One molecule, one bond: 1 × 945."],["Break H–H","3 H₂ molecules, one bond each. 3 × 436 =",1308,"3 × 400 = 1,200 and 3 × 36 = 108."],["Total energy in","945 + 1,308 =",2253,"Add the reactant bonds."],["Count N–H bonds","2 NH₃ × 3 N–H bonds each =",6,"Each NH₃ has three N–H bonds."],["Total energy out","6 × 391 =",2346,"6 × 400 = 2,400, then take away 6 × 9 = 54."],["Bigger minus smaller","2,346 − 2,253 =",93,"Energy out is bigger."],["Choose the sign","Energy in was smaller. Final ΔH:",-93,"Smaller − bigger is negative: exothermic."]],e:"2,253 − 2,346 = −93 kJ: exothermic."},
+{q:"H₂ + F₂ → 2HF. Bond energies (kJ/mol): H–H 436, F–F 159, H–F 567. What is ΔH?",n:-539,u:"kJ",h:"Energy in: H–H + F–F. Energy out: 2 H–F.",s:[["Total energy in","One H–H (436) + one F–F (159) =",595,"One H₂ and one F₂, one bond each."],["Total energy out","2 H–F bonds × 567 =",1134,"Two HF molecules, one bond each."],["Bigger minus smaller","1,134 − 595 =",539,"Energy out is bigger."],["Choose the sign","Energy in was smaller. Final ΔH:",-539,"Negative: strongly exothermic."]],e:"595 − 1,134 = −539 kJ: exothermic."},
+{q:"2HBr → H₂ + Br₂. Bond energies (kJ/mol): H–Br 366, H–H 436, Br–Br 193. What is ΔH?",n:103,u:"kJ",h:"Energy in: 2 H–Br. Energy out: H–H + Br–Br.",s:[["Count H–Br bonds","How many H–Br bonds are in 2HBr?",2,"Two molecules, one bond each."],["Total energy in","2 × 366 =",732,"These bonds must break."],["Total energy out","One H–H (436) + one Br–Br (193) =",629,"The products are one H₂ and one Br₂."],["Subtract","732 − 629 =",103,"Energy in is bigger, so ΔH is positive: endothermic."]],e:"732 − 629 = +103 kJ: endothermic."},
+{q:"2H₂O → 2H₂ + O₂ (splitting water). Bond energies (kJ/mol): O–H 463, H–H 436, O=O 498. What is ΔH?",n:482,u:"kJ",h:"Energy in: 4 O–H. Energy out: 2 H–H + 1 O=O.",s:[["Count O–H bonds","2 H₂O × 2 O–H bonds each =",4,"Water is H–O–H: two O–H bonds."],["Total energy in","4 × 463 =",1852,"4 × 400 = 1,600 and 4 × 63 = 252."],["Form H–H","2 H₂ × 436 =",872,"Two hydrogen molecules form."],["Total energy out","872 + 498 (one O=O) =",1370,"Add the oxygen molecule's bond."],["Subtract","1,852 − 1,370 =",482,"Energy in is bigger, so ΔH is positive: endothermic."]],e:"1,852 − 1,370 = +482 kJ: endothermic. Splitting water needs a lot of energy."},
+{q:"How much heat warms 200 g of water from 15 °C to 40 °C? Use q = mcΔT, c = 4.18 J/g·°C.",n:20900,u:"J",h:"ΔT = 40 − 15. Then multiply m × c × ΔT.",s:[["Find ΔT","Final − starting: 40 − 15 =",25,"ΔT is always final minus starting."],["Multiply m × c","200 × 4.18 =",836,"200 × 4 = 800 and 200 × 0.18 = 36."],["Multiply by ΔT","836 × 25 =",20900,"Shortcut: 836 × 100 = 83,600, then divide by 4."]],e:"q = 200 × 4.18 × 25 = 20,900 J."},
+{q:"How much heat warms 75 g of aluminum from 20 °C to 60 °C? Use q = mcΔT, c = 0.897 J/g·°C.",n:2691,u:"J",t:2,h:"ΔT = 60 − 20. Use the calculator for 75 × 0.897.",s:[["Find ΔT","60 − 20 =",40,"Final minus starting."],["Multiply m × c","75 × 0.897 =",67.275,"Use the calculator. Keep every decimal for now."],["Multiply by ΔT","67.275 × 40 =",2691,"Round to the nearest whole joule at the very end."]],e:"q = 75 × 0.897 × 40 = 2,691 J."},
+{q:"A reaction with ΔH = −802 kJ runs inside a beaker of water. The water will",o:["warm up","cool down","stay the same temperature","freeze"],a:0,e:"Negative ΔH: energy leaves the system and goes into the water."}]}
+];
+const V=[["Bond energy","The energy needed to break one mole of a particular bond; the same energy is given off when that bond forms.","The energy it takes to pull two bonded atoms apart."],["Chemical bond","An attraction between atoms that holds them together in a substance.","The 'glue' between atoms."],["Covalent bond","A bond in which two atoms share one or more pairs of electrons.","Atoms sharing electrons."],["Ionic bond","A bond formed by the attraction between a positive ion and a negative ion after electrons are transferred.","One atom gives up electrons, the other takes them, and they stick together."],["Electronegativity","How strongly an atom pulls shared electrons toward itself in a bond.","How hard an atom pulls on electrons."],["Endothermic","A process that takes in energy from its surroundings, so ΔH is positive.","Takes in heat. The surroundings get colder."],["Exothermic","A process that gives off energy to its surroundings, so ΔH is negative.","Gives off heat. The surroundings get warmer."],["Enthalpy change (ΔH)","The heat absorbed or released by a reaction at constant pressure.","How much heat a reaction gives off or takes in."],["Hess's law","The total ΔH of a reaction is the same no matter how many steps it takes.","The route doesn't matter, only the start and the finish."],["System","The part of the universe being studied; in a reaction, the reacting substances.","The chemicals doing the reacting."],["Surroundings","Everything outside the system that can exchange energy with it.","Everything else, including the container and the air."],["Conduction","Heat transfer through direct contact between particles.","Heat moving by touch."],["Convection","Heat transfer by the movement of a heated liquid or gas.","Heat carried by moving air or water."],["Radiation","Energy transfer by electromagnetic waves, which can cross empty space.","Heat that travels as light or waves, like sunshine."],["Activation energy","The minimum energy colliding particles need for a reaction to begin.","The starting push a reaction needs."],["Catalyst","A substance that speeds up a reaction by lowering its activation energy and is not used up.","A helper that speeds things up and stays unchanged."],["Kinetic energy","The energy an object or particle has because it is moving.","Energy of motion."],["Potential energy","Stored energy due to an object's position or a substance's chemical makeup.","Stored energy, waiting to be used."],["Specific heat","The energy needed to raise the temperature of 1 gram of a substance by 1 °C.","How much heat a material needs to warm up."],["Thermochemistry","The branch of chemistry that studies heat changes in reactions and changes of state.","The study of heat in chemistry."]];
+const BE=[["H–H",436],["C–H",413],["C–C",348],["C=C",614],["C≡C",839],["C=O",799],["O–H",463],["O=O",498],["N–H",391],["N≡N",945],["H–F",567],["F–F",159],["H–Cl",431],["Cl–Cl",242],["H–Br",366],["Br–Br",193]];
+const RX=[
+{k:"Burning methane",eq:"CH₄ + 2O₂ → CO₂ + 2H₂O",b:[["C–H",4,413],["O=O",2,498]],f:[["C=O",2,799],["O–H",4,463]]},
+{k:"Making ammonia",eq:"N₂ + 3H₂ → 2NH₃",b:[["N≡N",1,945],["H–H",3,436]],f:[["N–H",6,391]]},
+{k:"Hydrogen fluoride",eq:"H₂ + F₂ → 2HF",b:[["H–H",1,436],["F–F",1,159]],f:[["H–F",2,567]]},
+{k:"Splitting water",eq:"2H₂O → 2H₂ + O₂",b:[["O–H",4,463]],f:[["H–H",2,436],["O=O",1,498]]},
+{k:"Splitting HBr",eq:"2HBr → H₂ + Br₂",b:[["H–Br",2,366]],f:[["H–H",1,436],["Br–Br",1,193]]}];
+/* ---------- elements: [sym,name,mass,category,group,period,fIndex,config,EN,oxidation,state] ---------- */
+const ER=[["H","Hydrogen",1.008,"Nonmetal",1,1,null,"1s1",2.2,"+1, −1","Gas"],["He","Helium",4.0026,"Noble gas",18,1,null,"1s2",null,"0","Gas"],["Li","Lithium",6.94,"Alkali metal",1,2,null,"[He] 2s1",0.98,"+1","Solid"],["Be","Beryllium",9.0122,"Alkaline earth metal",2,2,null,"[He] 2s2",1.57,"+2","Solid"],["B","Boron",10.81,"Metalloid",13,2,null,"[He] 2s2 2p1",2.04,"+3","Solid"],["C","Carbon",12.011,"Nonmetal",14,2,null,"[He] 2s2 2p2",2.55,"+4, −4, +2","Solid"],["N","Nitrogen",14.007,"Nonmetal",15,2,null,"[He] 2s2 2p3",3.04,"−3, +3, +5","Gas"],["O","Oxygen",15.999,"Nonmetal",16,2,null,"[He] 2s2 2p4",3.44,"−2","Gas"],["F","Fluorine",18.998,"Halogen",17,2,null,"[He] 2s2 2p5",3.98,"−1","Gas"],["Ne","Neon",20.18,"Noble gas",18,2,null,"[He] 2s2 2p6",null,"0","Gas"],["Na","Sodium",22.99,"Alkali metal",1,3,null,"[Ne] 3s1",0.93,"+1","Solid"],["Mg","Magnesium",24.305,"Alkaline earth metal",2,3,null,"[Ne] 3s2",1.31,"+2","Solid"],["Al","Aluminum",26.982,"Post-transition metal",13,3,null,"[Ne] 3s2 3p1",1.61,"+3","Solid"],["Si","Silicon",28.085,"Metalloid",14,3,null,"[Ne] 3s2 3p2",1.9,"+4, −4","Solid"],["P","Phosphorus",30.974,"Nonmetal",15,3,null,"[Ne] 3s2 3p3",2.19,"+5, +3, −3","Solid"],["S","Sulfur",32.06,"Nonmetal",16,3,null,"[Ne] 3s2 3p4",2.58,"−2, +4, +6","Solid"],["Cl","Chlorine",35.45,"Halogen",17,3,null,"[Ne] 3s2 3p5",3.16,"−1, +1, +5, +7","Gas"],["Ar","Argon",39.95,"Noble gas",18,3,null,"[Ne] 3s2 3p6",null,"0","Gas"],["K","Potassium",39.098,"Alkali metal",1,4,null,"[Ar] 4s1",0.82,"+1","Solid"],["Ca","Calcium",40.078,"Alkaline earth metal",2,4,null,"[Ar] 4s2",1.0,"+2","Solid"],["Sc","Scandium",44.956,"Transition metal",3,4,null,"[Ar] 4s2 3d1",1.36,"+3","Solid"],["Ti","Titanium",47.867,"Transition metal",4,4,null,"[Ar] 4s2 3d2",1.54,"+4, +3","Solid"],["V","Vanadium",50.942,"Transition metal",5,4,null,"[Ar] 4s2 3d3",1.63,"+5, +4","Solid"],["Cr","Chromium",51.996,"Transition metal",6,4,null,"[Ar] 3d5 4s1",1.66,"+3, +6, +2","Solid"],["Mn","Manganese",54.938,"Transition metal",7,4,null,"[Ar] 4s2 3d5",1.55,"+2, +4, +7","Solid"],["Fe","Iron",55.845,"Transition metal",8,4,null,"[Ar] 4s2 3d6",1.83,"+2, +3","Solid"],["Co","Cobalt",58.933,"Transition metal",9,4,null,"[Ar] 4s2 3d7",1.88,"+2, +3","Solid"],["Ni","Nickel",58.693,"Transition metal",10,4,null,"[Ar] 4s2 3d8",1.91,"+2","Solid"],["Cu","Copper",63.546,"Transition metal",11,4,null,"[Ar] 3d10 4s1",1.9,"+2, +1","Solid"],["Zn","Zinc",65.38,"Transition metal",12,4,null,"[Ar] 4s2 3d10",1.65,"+2","Solid"],["Ga","Gallium",69.723,"Post-transition metal",13,4,null,"[Ar] 4s2 3d10 4p1",1.81,"+3","Solid"],["Ge","Germanium",72.63,"Metalloid",14,4,null,"[Ar] 4s2 3d10 4p2",2.01,"+4, +2","Solid"],["As","Arsenic",74.922,"Metalloid",15,4,null,"[Ar] 4s2 3d10 4p3",2.18,"+3, +5, −3","Solid"],["Se","Selenium",78.971,"Nonmetal",16,4,null,"[Ar] 4s2 3d10 4p4",2.55,"−2, +4, +6","Solid"],["Br","Bromine",79.904,"Halogen",17,4,null,"[Ar] 4s2 3d10 4p5",2.96,"−1, +1, +5","Liquid"],["Kr","Krypton",83.798,"Noble gas",18,4,null,"[Ar] 4s2 3d10 4p6",3.0,"0","Gas"],["Rb","Rubidium",85.468,"Alkali metal",1,5,null,"[Kr] 5s1",0.82,"+1","Solid"],["Sr","Strontium",87.62,"Alkaline earth metal",2,5,null,"[Kr] 5s2",0.95,"+2","Solid"],["Y","Yttrium",88.906,"Transition metal",3,5,null,"[Kr] 5s2 4d1",1.22,"+3","Solid"],["Zr","Zirconium",91.224,"Transition metal",4,5,null,"[Kr] 5s2 4d2",1.33,"+4","Solid"],["Nb","Niobium",92.906,"Transition metal",5,5,null,"[Kr] 4d4 5s1",1.6,"+5","Solid"],["Mo","Molybdenum",95.95,"Transition metal",6,5,null,"[Kr] 4d5 5s1",2.16,"+6, +4","Solid"],["Tc","Technetium",98.0,"Transition metal",7,5,null,"[Kr] 5s2 4d5",1.9,"+7, +4","Solid"],["Ru","Ruthenium",101.07,"Transition metal",8,5,null,"[Kr] 4d7 5s1",2.2,"+3, +4","Solid"],["Rh","Rhodium",102.91,"Transition metal",9,5,null,"[Kr] 4d8 5s1",2.28,"+3","Solid"],["Pd","Palladium",106.42,"Transition metal",10,5,null,"[Kr] 4d10",2.2,"+2, +4","Solid"],["Ag","Silver",107.87,"Transition metal",11,5,null,"[Kr] 4d10 5s1",1.93,"+1","Solid"],["Cd","Cadmium",112.41,"Transition metal",12,5,null,"[Kr] 5s2 4d10",1.69,"+2","Solid"],["In","Indium",114.82,"Post-transition metal",13,5,null,"[Kr] 5s2 4d10 5p1",1.78,"+3","Solid"],["Sn","Tin",118.71,"Post-transition metal",14,5,null,"[Kr] 5s2 4d10 5p2",1.96,"+4, +2","Solid"],["Sb","Antimony",121.76,"Metalloid",15,5,null,"[Kr] 5s2 4d10 5p3",2.05,"+3, +5","Solid"],["Te","Tellurium",127.6,"Metalloid",16,5,null,"[Kr] 5s2 4d10 5p4",2.1,"−2, +4, +6","Solid"],["I","Iodine",126.9,"Halogen",17,5,null,"[Kr] 5s2 4d10 5p5",2.66,"−1, +5, +7","Solid"],["Xe","Xenon",131.29,"Noble gas",18,5,null,"[Kr] 5s2 4d10 5p6",2.6,"0","Gas"],["Cs","Cesium",132.91,"Alkali metal",1,6,null,"[Xe] 6s1",0.79,"+1","Solid"],["Ba","Barium",137.33,"Alkaline earth metal",2,6,null,"[Xe] 6s2",0.89,"+2","Solid"],["La","Lanthanum",138.91,"Lanthanide",null,6,0,"[Xe] 5d1 6s2",1.1,"+3","Solid"],["Ce","Cerium",140.12,"Lanthanide",null,6,1,"[Xe] 4f1 5d1 6s2",1.12,"","Solid"],["Pr","Praseodymium",140.91,"Lanthanide",null,6,2,"[Xe] 6s2 4f3",1.13,"","Solid"],["Nd","Neodymium",144.24,"Lanthanide",null,6,3,"[Xe] 6s2 4f4",1.14,"","Solid"],["Pm","Promethium",145.0,"Lanthanide",null,6,4,"[Xe] 6s2 4f5",null,"","Solid"],["Sm","Samarium",150.36,"Lanthanide",null,6,5,"[Xe] 6s2 4f6",1.17,"","Solid"],["Eu","Europium",151.96,"Lanthanide",null,6,6,"[Xe] 6s2 4f7",null,"","Solid"],["Gd","Gadolinium",157.25,"Lanthanide",null,6,7,"[Xe] 4f7 5d1 6s2",1.2,"","Solid"],["Tb","Terbium",158.93,"Lanthanide",null,6,8,"[Xe] 6s2 4f9",null,"","Solid"],["Dy","Dysprosium",162.5,"Lanthanide",null,6,9,"[Xe] 6s2 4f10",1.22,"","Solid"],["Ho","Holmium",164.93,"Lanthanide",null,6,10,"[Xe] 6s2 4f11",1.23,"","Solid"],["Er","Erbium",167.26,"Lanthanide",null,6,11,"[Xe] 6s2 4f12",1.24,"","Solid"],["Tm","Thulium",168.93,"Lanthanide",null,6,12,"[Xe] 6s2 4f13",1.25,"","Solid"],["Yb","Ytterbium",173.05,"Lanthanide",null,6,13,"[Xe] 6s2 4f14",null,"","Solid"],["Lu","Lutetium",174.97,"Lanthanide",null,6,14,"[Xe] 6s2 4f14 5d1",1.27,"","Solid"],["Hf","Hafnium",178.49,"Transition metal",4,6,null,"[Xe] 6s2 4f14 5d2",1.3,"+4","Solid"],["Ta","Tantalum",180.95,"Transition metal",5,6,null,"[Xe] 6s2 4f14 5d3",1.5,"+5","Solid"],["W","Tungsten",183.84,"Transition metal",6,6,null,"[Xe] 6s2 4f14 5d4",2.36,"+6","Solid"],["Re","Rhenium",186.21,"Transition metal",7,6,null,"[Xe] 6s2 4f14 5d5",1.9,"","Solid"],["Os","Osmium",190.23,"Transition metal",8,6,null,"[Xe] 6s2 4f14 5d6",2.2,"","Solid"],["Ir","Iridium",192.22,"Transition metal",9,6,null,"[Xe] 6s2 4f14 5d7",2.2,"","Solid"],["Pt","Platinum",195.08,"Transition metal",10,6,null,"[Xe] 4f14 5d9 6s1",2.28,"+2, +4","Solid"],["Au","Gold",196.97,"Transition metal",11,6,null,"[Xe] 4f14 5d10 6s1",2.54,"+3, +1","Solid"],["Hg","Mercury",200.59,"Transition metal",12,6,null,"[Xe] 6s2 4f14 5d10",2.0,"+2, +1","Liquid"],["Tl","Thallium",204.38,"Post-transition metal",13,6,null,"[Xe] 6s2 4f14 5d10 6p1",1.62,"+1, +3","Solid"],["Pb","Lead",207.2,"Post-transition metal",14,6,null,"[Xe] 6s2 4f14 5d10 6p2",2.33,"+2, +4","Solid"],["Bi","Bismuth",208.98,"Post-transition metal",15,6,null,"[Xe] 6s2 4f14 5d10 6p3",2.02,"+3","Solid"],["Po","Polonium",209.0,"Metalloid",16,6,null,"[Xe] 6s2 4f14 5d10 6p4",2.0,"","Solid"],["At","Astatine",210.0,"Halogen",17,6,null,"[Xe] 6s2 4f14 5d10 6p5",2.2,"","Solid"],["Rn","Radon",222.0,"Noble gas",18,6,null,"[Xe] 6s2 4f14 5d10 6p6",null,"0","Gas"],["Fr","Francium",223.0,"Alkali metal",1,7,null,"[Rn] 7s1",0.7,"+1","Solid"],["Ra","Radium",226.0,"Alkaline earth metal",2,7,null,"[Rn] 7s2",0.9,"+2","Solid"],["Ac","Actinium",227.0,"Actinide",null,7,0,"[Rn] 6d1 7s2",1.1,"","Solid"],["Th","Thorium",232.04,"Actinide",null,7,1,"[Rn] 6d2 7s2",1.3,"","Solid"],["Pa","Protactinium",231.04,"Actinide",null,7,2,"[Rn] 5f2 6d1 7s2",1.5,"","Solid"],["U","Uranium",238.03,"Actinide",null,7,3,"[Rn] 5f3 6d1 7s2",1.38,"+6, +4","Solid"],["Np","Neptunium",237.0,"Actinide",null,7,4,"[Rn] 5f4 6d1 7s2",1.36,"","Solid"],["Pu","Plutonium",244.0,"Actinide",null,7,5,"[Rn] 7s2 5f6",1.28,"","Solid"],["Am","Americium",243.0,"Actinide",null,7,6,"[Rn] 7s2 5f7",1.3,"","Solid"],["Cm","Curium",247.0,"Actinide",null,7,7,"[Rn] 5f7 6d1 7s2",1.3,"","Solid"],["Bk","Berkelium",247.0,"Actinide",null,7,8,"[Rn] 7s2 5f9",1.3,"","Solid"],["Cf","Californium",251.0,"Actinide",null,7,9,"[Rn] 7s2 5f10",1.3,"","Solid"],["Es","Einsteinium",252.0,"Actinide",null,7,10,"[Rn] 7s2 5f11",1.3,"","Solid"],["Fm","Fermium",257.0,"Actinide",null,7,11,"[Rn] 7s2 5f12",1.3,"","Solid"],["Md","Mendelevium",258.0,"Actinide",null,7,12,"[Rn] 7s2 5f13",1.3,"","Solid"],["No","Nobelium",259.0,"Actinide",null,7,13,"[Rn] 7s2 5f14",1.3,"","Solid"],["Lr","Lawrencium",266.0,"Actinide",null,7,14,"[Rn] 5f14 7s2 7p1",null,"","Solid"],["Rf","Rutherfordium",267.0,"Transition metal",4,7,null,"[Rn] 7s2 5f14 6d2",null,"","Unknown (synthetic)"],["Db","Dubnium",268.0,"Transition metal",5,7,null,"[Rn] 7s2 5f14 6d3",null,"","Unknown (synthetic)"],["Sg","Seaborgium",269.0,"Transition metal",6,7,null,"[Rn] 7s2 5f14 6d4",null,"","Unknown (synthetic)"],["Bh","Bohrium",270.0,"Transition metal",7,7,null,"[Rn] 7s2 5f14 6d5",null,"","Unknown (synthetic)"],["Hs","Hassium",269.0,"Transition metal",8,7,null,"[Rn] 7s2 5f14 6d6",null,"","Unknown (synthetic)"],["Mt","Meitnerium",278.0,"Transition metal",9,7,null,"[Rn] 7s2 5f14 6d7",null,"","Unknown (synthetic)"],["Ds","Darmstadtium",281.0,"Transition metal",10,7,null,"[Rn] 7s2 5f14 6d8",null,"","Unknown (synthetic)"],["Rg","Roentgenium",282.0,"Transition metal",11,7,null,"[Rn] 7s2 5f14 6d9",null,"","Unknown (synthetic)"],["Cn","Copernicium",285.0,"Transition metal",12,7,null,"[Rn] 7s2 5f14 6d10",null,"","Unknown (synthetic)"],["Nh","Nihonium",286.0,"Post-transition metal",13,7,null,"[Rn] 7s2 5f14 6d10 7p1",null,"","Unknown (synthetic)"],["Fl","Flerovium",289.0,"Post-transition metal",14,7,null,"[Rn] 7s2 5f14 6d10 7p2",null,"","Unknown (synthetic)"],["Mc","Moscovium",290.0,"Post-transition metal",15,7,null,"[Rn] 7s2 5f14 6d10 7p3",null,"","Unknown (synthetic)"],["Lv","Livermorium",293.0,"Post-transition metal",16,7,null,"[Rn] 7s2 5f14 6d10 7p4",null,"","Unknown (synthetic)"],["Ts","Tennessine",294.0,"Halogen",17,7,null,"[Rn] 7s2 5f14 6d10 7p5",null,"","Unknown (synthetic)"],["Og","Oganesson",294.0,"Noble gas",18,7,null,"[Rn] 7s2 5f14 6d10 7p6",null,"","Unknown (synthetic)"]];
+const CATC={"Alkali metal":"#e2583e","Alkaline earth metal":"#ef9a2c","Transition metal":"#4f7fe0","Post-transition metal":"#5f9ea0","Metalloid":"#9a74d6","Nonmetal":"#2fa860","Halogen":"#d14d97","Noble gas":"#23a9c4","Lanthanide":"#c48a4a","Actinide":"#b0624e"};
+const EL=ER.map((r,i)=>({z:i+1,s:r[0],n:r[1],m:r[2],c:r[3],g:r[4],p:r[5],f:r[6],cf:r[7],en:r[8],ox:r[9],st:r[10]}));
+let pcLoaded=null;
+/* ---------- state ---------- */
+const RANKS=[[0,"Lab apprentice"],[150,"Lab assistant"],[400,"Analyst"],[800,"Researcher"],[1300,"Principal investigator"],[2000,"Laureate"]];
+const SUP=[["dark","Dark mode"],["big","Larger text"],["easy","Easy-read font"],["read","Read aloud"],["few","Fewer choices"],["notime","No timer"],["calm","Calm mode"]];
+const KEY="u2game2";
+let S={h:{},v:{},xp:0,exam:null,combo:0,best:0,n:0,c:0,days:0,last:"",sup:{}};
+try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d)S=Object.assign(S,d)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const fmt=n=>(n<0?"−":"")+Math.abs(n).toLocaleString("en-US",{maximumFractionDigits:3});
+const ALL=[];L.forEach((l,i)=>l.q.forEach((q,j)=>ALL.push(Object.assign({id:i+"-"+j,li:i},q))));
+const mast=i=>{const qs=ALL.filter(q=>q.li===i);return qs.filter(q=>S.h[q.id]===1).length/qs.length};
+const tried=i=>ALL.filter(q=>q.li===i&&S.h[q.id]!==undefined).length;
+const level=(m,t)=>!t?"Not started":m>=1?"Mastered":m>=.7?"Proficient":m>=.4?"Developing":"Beginning";
+const rankIdx=()=>{let r=0;RANKS.forEach((x,i)=>{if(S.xp>=x[0])r=i});return r};
+const medalOf=p=>p>=95?"Gold":p>=85?"Silver":p>=70?"Bronze":"";
+const canSpeak="speechSynthesis" in window;
+let P=null,VD=null,tick=null;
+function say(t){if(!canSpeak)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/→/g," makes ").replace(/Δ/g,"delta ").replace(/−/g," minus ").replace(/×/g," times ").replace(/≡/g," triple bond ").replace(/=/g," equals ").replace(/₁₂/g," 12 ").replace(/₂/g," 2 ").replace(/₃/g," 3 ").replace(/₄/g," 4 ").replace(/₆/g," 6 ").replace(/___/g," blank "));u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+let tt=null;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),3200)}
+function addXP(n){const r0=rankIdx();S.xp+=n;if(P)P.xp+=n;const r1=rankIdx();if(r1>r0)toast("Rank up: "+RANKS[r1][1])}
+function day(){const d=new Date(),t=d.toDateString(),y=new Date(d-864e5).toDateString();if(S.last!==t){S.days=S.last===y?S.days+1:1;S.last=t}}
+/* ---------- supports ---------- */
+function applySup(){const h=document.documentElement;h.dataset.theme=S.sup.dark?"dark":"light";["big","easy","calm"].forEach(k=>h.classList.toggle(k,!!S.sup[k]))}
+function supBar(){$("sup").innerHTML='<b>Learning supports</b>'+SUP.filter(s=>s[0]!=="read"||canSpeak).map(s=>'<button class="tg" aria-pressed="'+!!S.sup[s[0]]+'" data-s="'+s[0]+'">'+s[1]+'</button>').join('')}
+$("sup").addEventListener("click",e=>{const b=e.target.closest(".tg");if(!b)return;const k=b.dataset.s;S.sup[k]=!S.sup[k];save();supBar();applySup();setTimeout(diagram,50)});
+/* ---------- player + tiles ---------- */
+function medalSvg(ri){const c=["#8d939e","#6f7a8a","#1f56d6","#cf3c1b","#6b4fd6","#a8820f"][ri];return'<svg class="medal" viewBox="0 0 72 72" aria-hidden="true"><polygon points="36,3 65,19.5 65,52.5 36,69 7,52.5 7,19.5" fill="'+c+'"/><polygon points="36,10 59,23 59,49 36,62 13,49 13,23" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/><text x="36" y="44" text-anchor="middle" font-size="24" font-weight="700" fill="#fff" stroke-width="0" font-family="Schibsted Grotesk,sans-serif">'+(ri+1)+'</text></svg>'}
+function player(){
+  const ri=rankIdx(),cur=RANKS[ri],nx=RANKS[ri+1],pct=nx?(S.xp-cur[0])/(nx[0]-cur[0])*100:100;
+  const got=ALL.filter(q=>S.h[q.id]===1).length;
+  $("player").innerHTML=medalSvg(ri)+'<div><small>Rank '+(ri+1)+' of 6</small><h3>'+cur[1]+'</h3><div class="xpbar" role="progressbar" aria-valuenow="'+Math.round(pct)+'" aria-valuemin="0" aria-valuemax="100" aria-label="XP to next rank"><i style="width:'+pct+'%"></i></div><small>'+(nx?fmt(nx[0]-S.xp)+' XP to '+nx[1]:'Top rank reached')+'</small></div><div class="pf"><div><b>'+fmt(S.xp)+'</b><span>Total XP</span></div><div><b>'+S.days+'</b><span>Day streak</span></div><div><b>'+Math.round(got/ALL.length*100)+'%</b><span>Unit mastery</span></div><div><b>'+(S.exam&&medalOf(S.exam.p)?medalOf(S.exam.p):'—')+'</b><span>Exam medal</span></div></div>';
+}
+const tileHtml=i=>{const l=L[i],m=mast(i),c=m>=1?'gold':m>=.7?'won':'';return'<button class="tile '+c+'" data-t="'+i+'" aria-label="'+l.el[2]+', '+l.n+', '+Math.round(m*100)+'% mastered"><span class="z">'+l.el[1]+'</span><span class="sy">'+l.el[0]+'</span><span class="nm">'+l.el[2]+'</span><span class="tm"><i style="width:'+(m*100)+'%"></i></span></button>'};
+function tiles(){$("tiles").innerHTML=L.map((_,i)=>tileHtml(i)).join('');$("tcount").textContent=L.filter((_,i)=>mast(i)>=.7).length+" of 9 elements collected"}
+/* ---------- toolkit ---------- */
+function nl(){const a=+$("sIn").value,b=+$("sOut").value,d=a-b;$("vIn").textContent=fmt(a)+" kJ";$("vOut").textContent=fmt(b)+" kJ";const w=Math.min(Math.abs(d)/3500*50,50),bar=$("nlb");bar.style.width=w+"%";bar.style.left=(d<0?50-w:50)+"%";bar.style.background=d<0?"var(--out)":"var(--in)";$("nlr").innerHTML='ΔH = '+fmt(a)+' − '+fmt(b)+' = <span style="color:'+(d<0?'var(--out)':d>0?'var(--in)':'var(--ink)')+'">'+(d>0?'+':'')+fmt(d)+' kJ</span><br><span style="font-size:15px;font-weight:600;color:var(--mute)">'+(d<0?'Negative: exothermic, energy released':d>0?'Positive: endothermic, energy absorbed':'Zero: no net change')+'</span>'}
+$("sIn").addEventListener("input",nl);$("sOut").addEventListener("input",nl);
+const half=Math.ceil(BE.length/2),beT=a=>'<table><tbody>'+a.map(b=>'<tr><td><b>'+b[0]+'</b></td><td class="n">'+b[1]+'</td></tr>').join('')+'</tbody></table>';
+$("betab").innerHTML=beT(BE.slice(0,half))+beT(BE.slice(half));
+/* ---------- explorer ---------- */
+let rx=0;
+function tabs(){$("tabs").innerHTML=RX.map((r,i)=>'<button class="tab" aria-pressed="'+(i===rx)+'" data-i="'+i+'">'+r.k+'</button>').join('')}
+function calc(r){const i=r.b.reduce((s,x)=>s+x[1]*x[2],0),o=r.f.reduce((s,x)=>s+x[1]*x[2],0);return{i,o,d:i-o}}
+function work(){
+  const r=RX[rx],c=calc(r),exo=c.d<0;
+  const rows=a=>a.map(x=>'<tr><td>'+x[0]+'</td><td class="n">'+x[1]+' × '+fmt(x[2])+'</td><td class="n">'+fmt(x[1]*x[2])+'</td></tr>').join('');
+  $("work").innerHTML='<h3>Worked sum</h3><div class="eqn">'+r.eq+'</div><table><thead><tr><th>Bonds broken</th><th class="n">count × kJ/mol</th><th class="n">kJ</th></tr></thead><tbody>'+rows(r.b)+'<tr class="sub"><td>Energy in</td><td></td><td class="n" style="color:var(--in)">'+fmt(c.i)+'</td></tr></tbody></table><table style="margin-top:14px"><thead><tr><th>Bonds formed</th><th class="n">count × kJ/mol</th><th class="n">kJ</th></tr></thead><tbody>'+rows(r.f)+'<tr class="sub"><td>Energy out</td><td></td><td class="n" style="color:var(--out)">'+fmt(c.o)+'</td></tr></tbody></table><div class="res"><span style="font-size:14px;color:var(--mute)">ΔH = '+fmt(c.i)+' − '+fmt(c.o)+'</span><b>'+(c.d>0?"+":"")+fmt(c.d)+' kJ</b><span class="chip" style="background:'+(exo?'var(--out)':'var(--in)')+'">'+(exo?'Exothermic: energy released':'Endothermic: energy absorbed')+'</span></div>';
+}
+const svg=$("dg");
+function diagram(){
+  const W=svg.clientWidth,H=svg.clientHeight;if(!W)return;
+  const r=RX[rx],c=calc(r),cat=$("cat").checked,nar=W<520;
+  const m={l:nar?20:52,r:nar?20:40,t:44,b:40},lo=Math.min(0,c.d),hi=c.i;
+  const y=v=>m.t+(H-m.t-m.b)*(1-(v-lo)/(hi-lo));
+  const iw=W-m.l-m.r,x0=m.l,x1=m.l+iw*.26,x2=m.l+iw*.37,x3=m.l+iw*.63,x4=m.l+iw*.74,x5=W-m.r;
+  const yr=y(0),ya=y(c.i),yp=y(c.d),ex=c.d<0;
+  let g='<defs><marker id="ai" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--in)"/></marker><marker id="ao" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--out)"/></marker></defs>';
+  if(!nar)g+='<text transform="translate('+(m.l-30)+','+((m.t+H-m.b)/2)+') rotate(-90)" text-anchor="middle" font-size="13" fill="var(--mute)">Potential energy</text>';
+  g+='<path d="M'+x0+','+yr+' H'+x1+' C'+(x1+iw*.05)+','+yr+' '+(x2-iw*.05)+','+ya+' '+x2+','+ya+' H'+x3+' C'+(x3+iw*.05)+','+ya+' '+(x4-iw*.05)+','+yp+' '+x4+','+yp+' H'+x5+'" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 5" opacity=".55"/>';
+  if(cat){const yc=y(Math.max(c.d,0)+(c.i-Math.max(c.d,0))*.35);g+='<path d="M'+x1+','+yr+' C'+(x1+iw*.12)+','+yr+' '+x2+','+yc+' '+((x2+x3)/2)+','+yc+' C'+x3+','+yc+' '+(x4-iw*.12)+','+yp+' '+x4+','+yp+'" fill="none" stroke="var(--ok)" stroke-width="2.5"/><text x="'+((x2+x3)/2)+'" y="'+(yc-10)+'" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ok)">Catalyzed path</text>'}
+  [[x0,x1,yr,"Reactants"],[x2,x3,ya,"Separated atoms"],[x4,x5,yp,"Products"]].forEach(p=>{g+='<line x1="'+p[0]+'" x2="'+p[1]+'" y1="'+p[2]+'" y2="'+p[2]+'" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><text x="'+((p[0]+p[1])/2)+'" y="'+(p[2]-10)+'" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">'+(nar&&p[3]==="Separated atoms"?"Atoms":p[3])+'</text>'});
+  const ax=(x1+x2)/2-6,bx=(x3+x4)/2+6;
+  g+='<line x1="'+ax+'" y1="'+(yr-4)+'" x2="'+ax+'" y2="'+(ya+8)+'" stroke="var(--in)" stroke-width="3" marker-end="url(#ai)"/><line x1="'+bx+'" y1="'+(ya+4)+'" x2="'+bx+'" y2="'+(yp-8)+'" stroke="var(--out)" stroke-width="3" marker-end="url(#ao)"/>';
+  const lab=(x,yv,t,col,anc)=>'<text x="'+x+'" y="'+yv+'" text-anchor="'+anc+'" font-size="14" font-weight="700" fill="'+col+'">'+t+'</text>';
+  g+=lab(ax-8,(yr+ya)/2,(nar?"":"In ")+"+"+fmt(c.i),"var(--in)","end")+lab(bx+8,(ya+yp)/2,(nar?"":"Out ")+"−"+fmt(c.o),"var(--out)","start");
+  const dx=x5-6;g+='<line x1="'+dx+'" x2="'+dx+'" y1="'+yr+'" y2="'+yp+'" stroke="'+(ex?'var(--out)':'var(--in)')+'" stroke-width="2"/><line x1="'+(x4+(x5-x4)*.4)+'" x2="'+x5+'" y1="'+yr+'" y2="'+yr+'" stroke="var(--mute)" stroke-width="1" stroke-dasharray="3 3"/>';
+  g+=lab(dx-8,Math.min(Math.max(yr,yp)+24,H-8),"ΔH "+(c.d>0?"+":"")+fmt(c.d)+" kJ",ex?"var(--out)":"var(--in)","end");
+  svg.innerHTML=g;
+}
+const dgRO=new ResizeObserver(diagram);dgRO.observe(svg);
+/* ---------- periodic table ---------- */
+const PT={};
+const block=e=>e.f!=null?"f":(e.g<=2||e.z===2)?"s":e.g<=12?"d":"p";
+const valence=e=>e.f!=null||(e.g>=3&&e.g<=12)?null:e.z===2?2:e.g<=2?e.g:e.g-10;
+const K2C=k=>Math.round((k-273.15)*10)/10;
+function bondType(d){return d<.4?"nonpolar covalent":d<=1.7?"polar covalent":"ionic"}
+function mountPT(p,host){
+  PT[p]={sel:26,cat:null,q:""};
+  host.innerHTML='<div class="ptbar"><input id="'+p+'q" type="search" placeholder="Search name, symbol or number" aria-label="Search elements" autocomplete="off"><span class="ptsrc" id="'+p+'src"></span></div><div class="ptlay"><div><p class="swipe">Scroll sideways to see the whole table.</p><div class="scroll"><div class="pt" id="'+p+'g"></div></div><div class="legend" id="'+p+'lg"></div></div><div class="ptd" id="'+p+'d" aria-live="polite"></div></div>';
+  ptGrid(p);ptLegend(p);ptDetail(p);
+  $(p+"q").addEventListener("input",e=>{PT[p].q=e.target.value.trim().toLowerCase();ptGrid(p)});
+  $(p+"q").addEventListener("keydown",e=>{if(e.key==="Enter"){const m=EL.find(x=>match(x,PT[p].q));if(m){PT[p].sel=m.z;ptGrid(p);ptDetail(p)}}});
+  $(p+"g").addEventListener("click",e=>{const b=e.target.closest(".el");if(!b)return;PT[p].sel=+b.dataset.z;ptGrid(p);ptDetail(p)});
+  $(p+"lg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;PT[p].cat=PT[p].cat===b.dataset.c?null:b.dataset.c;ptGrid(p);ptLegend(p)});
+  host.addEventListener("change",e=>{if(e.target.id===p+"cmp"){PT[p].cmp=+e.target.value;ptDetail(p)}});
+}
+const match=(e,q)=>!q||e.s.toLowerCase()===q||e.n.toLowerCase().startsWith(q)||String(e.z)===q;
+function ptGrid(p){
+  const st=PT[p];let h='';for(let g=1;g<=18;g++)h+='<span class="gno" style="grid-column:'+g+';grid-row:1">'+g+'</span>';
+  EL.forEach(e=>{const col=e.f!=null?e.f+3:e.g,row=e.f!=null?(e.p===6?10:11):e.p+1;const dim=(st.q&&!match(e,st.q))||(st.cat&&e.c!==st.cat);
+    h+='<button class="el'+(e.z===st.sel?' sel':'')+(dim?' dim':'')+'" style="--c:'+(CATC[e.c]||"#888")+';grid-column:'+col+';grid-row:'+row+'" data-z="'+e.z+'" aria-label="'+e.n+', '+e.z+'"><span class="ez">'+e.z+'</span><span class="es">'+e.s+'</span></button>'});
+  h+='<span class="ph" style="grid-column:3;grid-row:7">57–71</span><span class="ph" style="grid-column:3;grid-row:8">89–103</span><span style="grid-column:1/-1;grid-row:9;height:8px"></span>';
+  $(p+"g").innerHTML=h;$(p+"src").textContent=pcLoaded===true?"Full data from PubChem loaded":pcLoaded===false?"Showing built-in data (PubChem extras unavailable offline)":"Loading full PubChem data…";
+}
+function ptLegend(p){$(p+"lg").innerHTML=Object.keys(CATC).map(c=>'<button data-c="'+c+'" aria-pressed="'+(PT[p].cat===c)+'" style="--c:'+CATC[c]+'"><i></i>'+c+'</button>').join('')}
+function ptDetail(p){
+  const e=EL[PT[p].sel-1],x=e.x||{},v=valence(e);
+  const rows=[["Atomic number",e.z],["Atomic mass",e.m+" u"],["Category",e.c],["Group",e.g??"— (f-block)"],["Period",e.p],["Block",block(e)],["Electron configuration",e.cf],["Valence electrons",v??"varies (transition/inner transition)"],["Electronegativity",e.en!=null&&e.en!==""?e.en+" (Pauling)":"not assigned"],["Common oxidation states",e.ox||"—"],["State at 25 °C",e.st]];
+  if(x.mp)rows.push(["Melting point",K2C(x.mp)+" °C ("+x.mp+" K)"]);
+  if(x.bp)rows.push(["Boiling point",K2C(x.bp)+" °C ("+x.bp+" K)"]);
+  if(x.d)rows.push(["Density",x.d+" g/cm³"]);
+  if(x.ar)rows.push(["Atomic radius",x.ar+" pm"]);
+  if(x.ie)rows.push(["First ionization energy",x.ie+" eV"]);
+  if(x.ea)rows.push(["Electron affinity",x.ea+" eV"]);
+  if(x.yr)rows.push(["Discovered",x.yr]);
+  const withEN=EL.filter(o=>o.en!=null&&o.en!==""&&o.z!==e.z);
+  const cz=PT[p].cmp&&PT[p].cmp!==e.z?PT[p].cmp:(e.z===17?11:17);const o=EL[cz-1];
+  let cmp='';
+  if(e.en!=null&&e.en!==""){const d=Math.round(Math.abs(e.en-o.en)*100)/100;cmp='<div class="cmp"><label for="'+p+'cmp">Bond with</label><select id="'+p+'cmp">'+withEN.map(w=>'<option value="'+w.z+'"'+(w.z===cz?' selected':'')+'>'+w.s+' · '+w.n+'</option>').join('')+'</select><p>Electronegativity difference: '+Math.max(e.en,o.en)+' − '+Math.min(e.en,o.en)+' = <b>'+d+'</b>. Likely bond: <b>'+bondType(d)+'</b>.</p><p style="color:var(--mute);font-size:13px">Rule of thumb: under 0.4 nonpolar covalent, 0.4 to 1.7 polar covalent, over 1.7 ionic. Two metals bond metallically instead.</p></div>'}
+  $(p+"d").innerHTML='<div class="big"><div class="bt" style="--c:'+(CATC[e.c]||"#888")+'"><span style="font-size:13px">'+e.z+'</span><b>'+e.s+'</b><span style="font-size:13px">'+e.m+'</span></div><div><h3>'+e.n+'</h3><span style="color:var(--mute);font-size:14px">'+e.c+'</span></div></div><table><tbody>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')+'</tbody></table>'+cmp;
+}
+function loadPubChem(){
+  import("https://cdn.jsdelivr.net/npm/pubchem-elements/+esm").then(mod=>{
+    const els=mod.elements||(mod.default&&mod.default.elements)||mod.default;if(!els)throw 0;
+    EL.forEach(e=>{const r=els[e.z];if(!r)return;const n=v=>v===""||v==null||isNaN(+v)?null:+v;
+      if(n(r.AtomicMass))e.m=Math.round(+r.AtomicMass*1000)/1000;
+      if(r.ElectronConfiguration)e.cf=String(r.ElectronConfiguration).replace(/\s*\(calculated\)|\s*\(predicted\)/g,"");
+      if(n(r.Electronegativity)!=null)e.en=+r.Electronegativity;
+      if(Array.isArray(r.OxidationStates)&&r.OxidationStates.length)e.ox=r.OxidationStates.map(v=>v>0?"+"+v:v<0?"−"+(-v):"0").join(", ");
+      if(r.StandardState)e.st=r.StandardState;
+      e.x={mp:n(r.MeltingPoint),bp:n(r.BoilingPoint),d:n(r.Density),ar:n(r.AtomicRadius),ie:n(r.IonizationEnergy),ea:n(r.ElectronAffinity),yr:r.YearDiscovered||null}});
+    pcLoaded=true;Object.keys(PT).forEach(p=>{ptGrid(p);ptDetail(p)});
+  }).catch(()=>{pcLoaded=false;Object.keys(PT).forEach(p=>ptGrid(p))});
+}
+const ptov=$("ptov");
+function openPT(z){ptov.classList.add("on");if(z){PT.b.sel=z;ptGrid("b");ptDetail("b")}setTimeout(()=>$("bq").focus({preventScroll:true}),30)}
+function closePT(){ptov.classList.remove("on")}
+$("fab").addEventListener("click",()=>openPT());$("ptclose").addEventListener("click",closePT);
+/* ---------- ledger ---------- */
+function ledger(){
+  $("ledger").innerHTML=L.map((l,i)=>{const m=mast(i),t=tried(i),c=m>=1?'gold':m>=.7?'won':'';return'<div class="row"><span class="mini '+c+'" aria-hidden="true">'+l.el[0]+'</span><div><h3>'+l.n+'</h3><small>'+l.o+'</small></div><div class="m"><div class="meter" aria-label="'+Math.round(m*100)+'% mastered"><i style="width:'+(m*100)+'%"></i></div><small style="margin-top:6px;display:block;font-size:13px">'+Math.round(m*100)+'% · '+t+' of '+l.q.length+' tried</small></div><span class="lvl">'+level(m,t)+'</span><button class="btn '+(m>=1?'ghost':'')+'" data-p="'+i+'">'+(t?(m>=1?'Replay':'Continue'):'Begin')+'</button></div>'}).join('');
+  const weak=ALL.filter(q=>S.h[q.id]===0).length;$("kWeak").textContent=weak;$("mWeak").disabled=!weak;
+  $("kExam").textContent=S.exam?(medalOf(S.exam.p)||"Best")+" · "+S.exam.p+"%":"Not taken yet";
+  $("kVocab").textContent=V.filter((_,i)=>S.v[i]===1).length+"/"+V.length;
+}
+function refresh(){player();tiles();ledger();save()}
+/* ---------- focus mode ---------- */
+const ov=$("ov"),qw=$("qw");
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function prep(q){if(!q.o)return Object.assign({},q);let ord=q.o.map((_,k)=>k);if(S.sup.few){ord=[q.a,shuffle(ord.filter(k=>k!==q.a))[0]]}return Object.assign({},q,{ord:shuffle(ord)})}
+function lock(){ov.classList.add("on");document.body.style.overflow="hidden"}
+function open(kind,title,qs){VD=null;P={kind,title,qs:qs.map(prep),i:0,ans:false,res:[],re:{},t0:Date.now(),xp:0,before:L.map((_,i)=>mast(i))};lock();ask();clearInterval(tick);if(kind==="exam")tick=setInterval(()=>{if(P&&!P.done)top()},1000)}
+function shut(){ov.classList.remove("on");document.body.style.overflow="";P=null;VD=null;clearInterval(tick);try{canSpeak&&speechSynthesis.cancel()}catch(e){}refresh()}
+function clock(){const s=Math.floor((Date.now()-P.t0)/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function top(){const p=P,n=p.qs.length;$("ovt").textContent=p.title+" · "+Math.min(p.i+1,n)+" of "+n+(p.kind==="exam"&&!S.sup.notime?" · "+clock():"");$("prog").style.width=(p.i/n*100)+"%";$("ovxp").textContent="+"+p.xp+" XP";$("ovc").textContent=S.combo>=2?"Combo ×"+S.combo:""}
+let C={d:"0",a:null,op:null,f:false},calcOn=false;
+function calcHtml(){return'<div class="calc" id="calc"><div class="cd" id="cd" aria-live="polite">'+C.d+'</div><div class="ck">'+["7","8","9","÷","4","5","6","×","1","2","3","−","0",".","±","+","C","=","Use"].map(k=>'<button type="button" data-c="'+k+'" class="'+("÷×−+=".includes(k)?'op':'')+'"'+(k==="Use"?' style="grid-column:span 2"':'')+' aria-label="'+({"÷":"divide","×":"times","−":"minus","±":"change sign","C":"clear","Use":"use this number"}[k]||k)+'">'+(k==="Use"?"Use answer":k)+'</button>').join('')+'</div></div>'}
+function cpress(k){
+  const comp=()=>{const b=parseFloat(C.d),a=C.a;const r=C.op==="+"?a+b:C.op==="−"?a-b:C.op==="×"?a*b:b===0?NaN:a/b;C.d=isFinite(r)?String(+r.toFixed(6)):"Error";C.a=r};
+  if(/^[0-9.]$/.test(k)){if(C.f||C.d==="Error"){C.d="0";C.f=false}if(k==="."&&C.d.includes("."))return;C.d=(C.d==="0"&&k!==".")?k:C.d+k}
+  else if("+−×÷".includes(k)){if(C.op&&!C.f)comp();else C.a=parseFloat(C.d);C.op=k;C.f=true}
+  else if(k==="="){if(C.op){comp();C.op=null;C.f=true}}
+  else if(k==="C"){C={d:"0",a:null,op:null,f:false}}
+  else if(k==="±"){C.d=C.d.startsWith("-")?C.d.slice(1):(C.d==="0"?"0":"-"+C.d)}
+  else if(k==="Use"){const inp=$("gi")||$("na");if(inp&&!inp.disabled){inp.value=C.d;inp.focus()}}
+  $("cd").textContent=C.d;
+}
+function ask(){
+  const p=P,q=p.qs[p.i],exam=p.kind==="exam";p.ans=false;p.g=null;top();
+  let body;
+  if(q.eo)body='<div class="opts two"><button class="opt" data-k="0"><kbd>1</kbd>Exothermic: gives off heat</button><button class="opt" data-k="1"><kbd>2</kbd>Endothermic: takes in heat</button></div>';
+  else if(q.o)body='<div class="opts">'+q.ord.map((k,j)=>'<button class="opt" data-k="'+k+'"><kbd>'+(j+1)+'</kbd>'+q.o[k]+'</button>').join('')+'</div>';
+  else body='<form class="nr" id="nf"><input id="na" inputmode="decimal" autocomplete="off" aria-label="Your answer"><span class="u">'+q.u+'</span><button class="btn" type="submit">Check</button></form><div id="gd"></div>';
+  const tools=[];
+  if(S.sup.read&&canSpeak)tools.push('<button class="lnk" id="rd" type="button">Read aloud</button>');
+  if(!exam&&q.s)tools.push('<button class="lnk" id="wt" type="button">Walk me through it</button>');
+  if(!exam&&q.h)tools.push('<button class="lnk" id="hb" type="button">Hint</button>');
+  if(!exam&&q.o&&q.ord.length>2)tools.push('<button class="lnk" id="rm" type="button">Remove a wrong answer</button>');
+  if(q.n!==undefined)tools.push('<button class="lnk" id="cb" type="button">'+(calcOn?'Hide':'Show')+' calculator</button>');
+  if(q.pt)tools.push('<button class="lnk" id="opt" type="button">Open periodic table</button>');
+  qw.innerHTML='<div class="qmeta"><span>'+L[q.li].el[0]+' · '+L[q.li].n+'</span><span>'+(p.re[q.id]?'Second try':'')+'</span></div><p class="qtext">'+q.q+'</p><div class="tools">'+tools.join('')+'</div><div id="ht"></div>'+body+(q.n!==undefined&&calcOn?calcHtml():'')+'<div id="fb"></div>';
+  const na=$("na");if(na)na.focus({preventScroll:true});
+}
+function guide(){
+  const p=P,q=p.qs[p.i],g=p.g,n=q.s.length;
+  const plan='<ol class="plan">'+q.s.map((s,i)=>'<li class="'+(i<g.k?'done':i===g.k?'now':'')+'"><span class="d">'+(i<g.k?'✓':i+1)+'</span><span>'+s[0]+'</span>'+(i<g.k?'<b>'+fmt(s[2])+'</b>':'<span></span>')+'</li>').join('')+'</ol>';
+  const cur=q.s[g.k];
+  const body=cur?'<form class="gcur" id="gf"><div class="gk">Step '+(g.k+1)+' of '+n+' · '+cur[0]+'</div><p class="gp">'+cur[1]+'</p>'+(cur[3]?'<p class="gh"><b>How:</b> '+cur[3]+'</p>':'')+'<div class="nr"><input id="gi" inputmode="decimal" autocomplete="off" aria-label="Answer for this step"><button class="btn" type="submit">Check step</button><button class="lnk" type="button" id="gshow">Show me this step</button></div><div class="gmsg'+(g.bad?' no':'')+'" id="gm">'+(g.msg||'')+'</div></form>':'<div class="gdone">All '+n+' steps done. Your last step, '+fmt(q.s[n-1][2])+(q.u?' '+q.u:'')+', is the answer. Type it in the answer box above and press Check.</div>';
+  $("gd").innerHTML='<div class="guide"><div class="ghd"><h4>Walk-through: '+n+' small steps</h4><p>Do one step at a time. Each step tells you how. Use the calculator any time.</p></div>'+plan+body+'</div>';
+  const gi=$("gi");(gi||$("na")).focus({preventScroll:true});
+  if(S.sup.read&&canSpeak&&cur)say("Step "+(g.k+1)+". "+cur[1]+". "+(cur[3]||""));
+}
+const num=v=>parseFloat(String(v).replace(/[−–]/g,"-").replace(/[,\s]/g,""));
+function stepCheck(){
+  const q=P.qs[P.i],g=P.g,st=q.s[g.k],a=st[2],v=num($("gi").value);if(isNaN(v)){$("gi").focus();return}
+  const tol=Math.abs(a)<1?.005:Math.abs(a)>100&&!Number.isInteger(a)?.5:.5;
+  if(Math.abs(v-a)<=tol){g.k++;g.tries=0;g.msg="Correct. On to the next step.";g.bad=false;addXP(1);top();guide();return}
+  g.tries++;g.bad=true;
+  if(g.tries>=2){g.msg="That step is "+fmt(a)+". "+(st[3]||"")+" It's filled in for you, so keep going.";g.k++;g.tries=0;g.bad=false;guide();return}
+  if(Math.abs(v)===Math.abs(a))g.msg="The number is right, but check the sign. Should it be negative or positive?";
+  else if(a!==0&&Math.abs(v-a)/Math.abs(a)<.05)g.msg="Very close. Recheck the last digits of your arithmetic.";
+  else if(a!==0&&(Math.abs(v*10-a)<1e-6*Math.max(1,Math.abs(a))||Math.abs(v/10-a)<1e-6*Math.max(1,Math.abs(a))||Math.abs(v*100-a)<1e-6||Math.abs(v/100-a)<1e-6))g.msg="Check where the decimal point goes.";
+  else g.msg="Not yet. Read the How line again, then try once more. The calculator can help.";
+  guide();
+}
+function answer(ok,btn){
+  const p=P,q=p.qs[p.i],exam=p.kind==="exam";if(p.ans)return;p.ans=true;day();
+  S.h[q.id]=ok?1:0;S.n++;
+  let gain;if(ok){S.c++;S.combo++;S.best=Math.max(S.best,S.combo);gain=p.re[q.id]?5:p.g?7:10+Math.min(S.combo-1,5)*2}else{S.combo=0;gain=2}
+  addXP(gain);p.res.push({q,ok});save();top();
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const k=+b.dataset.k;if(exam){if(b===btn)b.classList.add("pick")}else if(k===q.a)b.classList.add("ok");else if(b===btn)b.classList.add("no")});
+  const gi=$("gi");if(gi)gi.disabled=true;
+  if(!ok&&!exam&&!p.re[q.id]){p.re[q.id]=1;p.qs.push(prep(q))}
+  if(exam){next();return}
+  const corr=q.o?q.o[q.a]:q.eo?(q.a?'Endothermic':'Exothermic'):fmt(q.n)+(q.u?' '+q.u:'');
+  const praise=["Correct","Nice work","Exactly right","Well done"][S.c%4];
+  $("fb").innerHTML='<div class="fb '+(ok?'':'no')+'"><span class="xp">+'+gain+' XP</span><b>'+(ok?praise+(S.combo>=3?' · combo ×'+S.combo:''):'Not this time. The answer is '+corr)+'</b><p>'+q.e+(ok?'':' You still earned XP for trying, and this one comes back at the end so you can get it.'+(q.s&&!p.g?' Try "Walk me through it" next time.':''))+'</p></div><div class="acts"><button class="btn" id="nx">'+(p.i===p.qs.length-1?'Finish':'Continue')+'</button><span class="tip">or press Enter</span></div>';
+  if(S.sup.read&&canSpeak)say((ok?"Correct. ":"The answer is "+corr+". ")+q.e);
+  $("nx").focus({preventScroll:true});
+}
+function next(){const p=P;if(p.i>=p.qs.length-1)finish();else{p.i++;ask()}}
+function finish(){
+  const p=P,first={};p.res.forEach(r=>{if(!(r.q.id in first))first[r.q.id]=r.ok});
+  const ids=Object.keys(first),right=ids.filter(k=>first[k]).length,pc=ids.length?Math.round(right/ids.length*100):0;
+  $("prog").style.width="100%";clearInterval(tick);p.done=true;
+  let extra='',rew='';
+  if(p.kind==="exam"){const md=medalOf(pc),bonus=md==="Gold"?200:md==="Silver"?100:md==="Bronze"?50:0;if(bonus)addXP(bonus);if(!S.exam||pc>S.exam.p)S.exam={p:pc,t:clock()};
+    if(md)rew='<div class="reward"><svg width="80" height="80" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="36" fill="'+({Gold:"#c9a227",Silver:"#a7adb7",Bronze:"#b07a45"}[md])+'"/><circle cx="40" cy="40" r="28" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/><text x="40" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="#fff" font-family="Schibsted Grotesk,sans-serif">'+pc+'</text></svg><div><b style="font-size:22px">'+md+' medal</b><p style="margin:4px 0 0">+'+bonus+' bonus XP</p></div></div>';
+    const miss=p.res.filter(r=>!r.ok);
+    extra='<div class="review">'+(miss.length?miss.map(r=>{const q=r.q,c=q.o?q.o[q.a]:q.eo?(q.a?'Endothermic':'Exothermic'):fmt(q.n)+(q.u?' '+q.u:'');return'<div class="rv"><span style="font-size:13px;color:var(--mute)">'+L[q.li].n+'</span><p>'+q.q+'</p><p class="a"><b style="color:var(--ink)">'+c+'.</b> '+q.e+'</p></div>'}).join(''):'<div class="rv"><p>No misses. Every objective held up under exam conditions.</p></div>')+'</div>'}
+  else{const idx=L.map((_,i)=>i),show=idx.filter(i=>(p.before[i]<.7&&mast(i)>=.7)||(p.before[i]<1&&mast(i)>=1));
+    if(show.length){rew=show.map(i=>'<div class="reward">'+tileHtml(i)+'<div><b style="font-size:22px">'+(mast(i)>=1?'Gold '+L[i].el[2]+'!':L[i].el[2]+' collected!')+'</b><p style="margin:4px 0 0">'+(mast(i)>=1?L[i].n+' is fully mastered.':'You reached 70% on '+L[i].n+'. Reach 100% to turn it gold.')+'</p></div></div>').join('');toast(show.length>1?"New elements collected":"New element: "+L[show[0]].el[2])}}
+  save();
+  const msg=p.kind==="exam"?(pc>=95?"Gold-level performance.":pc>=70?"Medal earned. Review the misses below, then go for the next medal.":"Not a medal yet. Work your weakest objectives, then retake it; your best score is what counts."):(pc===100?"Perfect set.":"You finished the set, including every retry. Replay it any time to raise your first-try score.");
+  qw.innerHTML='<div class="qmeta"><span>'+p.title+' complete</span><span>'+(p.kind==="exam"&&!S.sup.notime?'Time '+clock():'')+'</span></div><div class="score">'+pc+'%</div><p class="qtext" style="margin-top:14px">'+right+' of '+ids.length+' right on the first try · +'+p.xp+' XP earned. '+msg+'</p>'+rew+'<div class="acts"><button class="btn" id="done">Back to overview</button>'+(p.kind==="exam"?'<button class="btn ghost" id="again">Retake exam</button>':'')+'</div>'+extra;
+  $("ovt").textContent=p.title+" · complete";$("ovc").textContent="";
+  const b=$("done");b&&b.focus({preventScroll:true});
+}
+function exam(){open("exam","Final exam",shuffle(ALL).slice(0,12))}
+function vocab(){P=null;VD={o:shuffle(V.map((_,i)=>i)).sort((a,b)=>(S.v[a]===1)-(S.v[b]===1)),i:0,show:false,k:0};lock();$("ovxp").textContent="";$("ovc").textContent="";vshow()}
+function vshow(){
+  const i=VD.o[VD.i],v=V[i],n=V.length;$("ovt").textContent="Recall drill · "+(VD.i+1)+" of "+n;$("prog").style.width=(VD.i/n*100)+"%";
+  qw.innerHTML='<div class="qmeta"><span>Say what this means</span><span>'+(S.v[i]===1?'You knew this last time':'')+'</span></div><div class="term">'+v[0]+'</div>'+(S.sup.read&&canSpeak?'<div class="tools"><button class="lnk" id="vrd" type="button">Read aloud</button></div>':'')+(VD.show?'<div class="plain"><b>In plain words:</b> '+v[2]+'</div><div class="defn">'+v[1]+'</div><div class="acts"><button class="btn" id="vk">I knew it</button><button class="btn ghost" id="vr">Review again</button><span class="tip">Keys 1 and 2</span></div>':'<div class="acts"><button class="btn" id="vs">Reveal</button><span class="tip">or press Space</span></div>');
+  const b=$("vs")||$("vk");b&&b.focus({preventScroll:true});
+}
+function vmark(k){const i=VD.o[VD.i],n=V.length;S.v[i]=k;day();addXP(k?3:1);if(k)VD.k++;save();
+  if(VD.i>=n-1){$("prog").style.width="100%";VD.done=true;qw.innerHTML='<div class="score">'+VD.k+'/'+n+'</div><p class="qtext" style="margin-top:14px">terms recalled this round. '+(VD.k===n?'Full recall.':'The ones you marked come first next time.')+'</p><div class="acts"><button class="btn" id="done">Back to overview</button><button class="btn ghost" id="vagain">Run again</button></div>'}
+  else{VD.i++;VD.show=false;vshow()}}
+/* ---------- events ---------- */
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(!b)return;rx=+b.dataset.i;tabs();work();diagram()});
+$("cat").addEventListener("change",diagram);
+const startSet=i=>open("set",L[i].n,shuffle(ALL.filter(q=>q.li===i)));
+$("ledger").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(b)startSet(+b.dataset.p)});
+$("tiles").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b)startSet(+b.dataset.t)});
+$("mExam").addEventListener("click",exam);
+$("mWeak").addEventListener("click",()=>{const w=ALL.filter(q=>S.h[q.id]===0);if(w.length)open("weak","Weak spots",shuffle(w))});
+$("mVocab").addEventListener("click",vocab);
+$("close").addEventListener("click",shut);
+qw.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.id==="done"){shut();return}
+  if(t.id==="again"){exam();return}
+  if(t.id==="vagain"){vocab();return}
+  if(VD){const v=V[VD.o[VD.i]];if(t.id==="vs"){VD.show=true;vshow()}else if(t.id==="vk")vmark(1);else if(t.id==="vr")vmark(0);else if(t.id==="vrd")say(v[0]+(VD.show?". In plain words: "+v[2]+". "+v[1]:""));return}
+  if(!P)return;const q=P.qs[P.i];
+  if(t.dataset.c){cpress(t.dataset.c);return}
+  if(t.id==="nx"){next();return}
+  if(t.id==="opt"){openPT(17);return}
+  if(t.id==="rd"){say(q.q+(q.o?". "+q.ord.map((k,j)=>"Choice "+(j+1)+": "+q.o[k]).join(". "):q.eo?". Choice 1: exothermic. Choice 2: endothermic.":""));return}
+  if(t.id==="hb"){$("ht").innerHTML='<div class="hintx">'+q.h+'</div>';return}
+  if(t.id==="cb"){calcOn=!calcOn;const ex=$("calc");if(calcOn&&!ex)$("fb").insertAdjacentHTML("beforebegin",calcHtml());else if(!calcOn&&ex)ex.remove();t.textContent=(calcOn?'Hide':'Show')+' calculator';return}
+  if(t.id==="wt"){if(!P.g&&!P.ans){P.g={k:0,tries:0};guide()}t.remove();return}
+  if(t.id==="gshow"){const g=P.g,st=q.s[g.k];g.msg="Step "+(g.k+1)+" is "+fmt(st[2])+". "+(st[3]||"");g.bad=false;g.k++;g.tries=0;guide();return}
+  if(t.id==="rm"){const wrong=[...qw.querySelectorAll(".opt:not(:disabled)")].filter(b=>+b.dataset.k!==q.a);if(wrong.length>1){const b=wrong[Math.floor(Math.random()*wrong.length)];b.classList.add("gone");b.disabled=true}if(wrong.length<=2)t.remove();return}
+  if(t.classList.contains("opt")&&!P.ans)answer(+t.dataset.k===q.a,t);
+});
+qw.addEventListener("submit",e=>{
+  e.preventDefault();if(!P||P.ans)return;const q=P.qs[P.i];
+  if(e.target.id==="gf"){stepCheck();return}
+  const v=num($("na").value);if(isNaN(v)){$("na").focus();return}
+  $("na").disabled=true;answer(Math.abs(v-q.n)<=(q.t??1));
+});
+document.addEventListener("keydown",e=>{
+  if(ptov.classList.contains("on")){if(e.key==="Escape")closePT();return}
+  if(!ov.classList.contains("on"))return;
+  if(e.key==="Escape"){shut();return}
+  if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT")return;
+  if(VD&&!VD.done){if(!VD.show&&e.key===" "){e.preventDefault();VD.show=true;vshow()}else if(VD.show&&e.key==="1")vmark(1);else if(VD.show&&e.key==="2")vmark(0);return}
+  if(!P||P.done)return;
+  if(!P.ans&&/^[1-4]$/.test(e.key)){const b=qw.querySelectorAll(".opt")[+e.key-1];if(b&&!b.disabled)b.click()}
+  else if(P.ans&&e.key==="Enter"&&document.activeElement.id!=="nx"){e.preventDefault();next()}
+});
+function boot(d){if(d&&d.h)S=Object.assign(S,d);S.sup=S.sup||{};applySup();supBar();tabs();work();nl();mountPT("a",$("ptMain"));mountPT("b",$("ptDlg"));refresh();diagram();loadPubChem()}
+window.claude?.hot?.snapshot?.(()=>S);
+window.claude?.hot?.ready?window.claude.hot.ready(boot):boot(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
